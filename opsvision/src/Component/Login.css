@@ -1,0 +1,181 @@
+body {
+
+    margin: 0;
+
+    font-family: Arial, sans-serif;
+
+    background-color: #000;
+
+    color: #fff;
+
+}
+
+ 
+
+.logo-container {
+
+    position: absolute;
+
+    top: 15px; /* Adjust as needed */
+
+    left: 15px; /* Adjust as needed */
+
+    z-index: 10; /* Ensure it appears above other elements */
+
+  }
+
+   
+
+  .logo {
+
+    width: 40px; /* Adjust size as needed */
+
+    height: auto;
+
+  }
+
+   
+
+ 
+
+.login-container {
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    height: 100vh;
+
+    background: linear-gradient(135deg, #111, #222);
+
+    box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.5);
+
+    padding: 20px; /* Add padding to the container */
+
+    /* margin-left:40px; */
+
+}
+
+.login-form {
+    background-color: #f9f9f9; /* Light background */
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(255, 165, 0, 0.5);
+    text-align: center;
+    transition: transform 0.3s ease;
+    width: 900px !important;
+    margin-left: 140px;
+    color: #000; /* Make text inside form black */
+}
+
+
+
+
+ 
+
+.login-form h2 {
+
+    margin-bottom: 20px;
+
+    color: #FFA500;
+
+    font-size: 24px;
+
+}
+
+ 
+.login-form input {
+    background-color: #fff; /* Light background */
+    color: #000; /* Dark text */
+    border: 1px solid #ccc;
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+
+ 
+
+.login-form input:focus {
+    background-color: #fff;
+    border-color: #ffa500;
+    outline: none;
+}
+
+
+ 
+
+.login-form button {
+
+    width: 100%;
+
+    padding: 10px; /* Adjust padding if needed */
+
+    background-color: #FFA500;
+
+    border: none;
+
+    border-radius: 6px;
+
+    color: #fff;
+
+    font-size: 16px;
+
+    cursor: pointer;
+
+    transition: background-color 0.3s ease, transform 0.3s ease;
+
+}
+
+ 
+
+.login-form button:hover {
+
+    background-color: #ff8c00;
+
+    transform: translateY(-2px);
+
+}
+
+ 
+
+.login-form button:active {
+
+    transform: translateY(0);
+
+}
+
+ 
+
+.image-container {
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+}
+
+ 
+
+.image-container img {
+
+    width: 600px; /* Adjust size as needed */
+
+    height: auto; /* Maintain aspect ratio */
+
+    margin-left: 160px;
+
+}
+
+ 
+
+ 
+
+   

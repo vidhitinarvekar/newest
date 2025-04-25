@@ -1,0 +1,118 @@
+.landing-page {
+  display: flex;
+  height: 100vh;
+  background-color: #000;
+  color: white;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  position: relative; /* 🆕 So top-right-profile stays within this layout */
+}
+
+.sidebar {
+  width: 250px;
+  background-color: #FF7900;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.sidebar h2 {
+  color: white;
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar ul li {
+  margin-bottom: 15px;
+}
+
+.sidebar ul li a {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.sidebar ul li a:hover {
+  color: #eee;
+}
+
+.logout-button {
+  padding: 10px 20px;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.logout-button:hover {
+  background-color: #c0392b;
+}
+
+.main-content {
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.images {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  padding: 20px 0;
+  margin-left: 500px;
+}
+
+.state {
+  width: 450px;
+  max-width: 100%;
+  height:500px;
+  object-fit: contain;
+  border-radius: 10px;
+  margin-left: 100px;
+}
+
+.mod{
+  margin-bottom: 800px;
+  border: 2px solid black;
+  padding:3px;
+  border-radius: 4px;
+  align-items: center;
+}
+
+.top-right-profile {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  z-index: 10;
+  margin-top: 30px;
+}
+
+.profile-section {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: white;
+  background-color: #444;
+  padding: 5px 10px;
+  border-radius: 8px;
+}
+
+.profile-icon {
+  margin-right: 6px;
+}
+
+.profile-name {
+  font-weight: bold;
+}

@@ -1,0 +1,87 @@
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import "./Login.css";
+import image1png from "./image1.png";
+import logo from "./images.png";
+import { login } from "../Services/api";
+
+const Login = ({ setIsAuthenticated = () => {} }) => {
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    if (email.trim() === "") {
+      setError("Email is required!");
+      return;
+    }
+
+    try {
+      const response = await login(email);
+
+      if (!response) {
+        setError("Invalid login credentials.");
+        return;
+      }
+
+      const { token, role, name, email: userEmail, staffId } = response;
+
+      if (!role) {
+        setError("Role information is missing. Please contact admin.");
+        return;
+      }
+
+      // ✅ Store values BEFORE navigating
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role);
+      localStorage.setItem("name", name || "");
+      localStorage.setItem("email", userEmail);
+      localStorage.setItem("staffId", staffId || "");
+
+      setIsAuthenticated(true);
+
+      // ✅ Redirect based on role
+      if (role === "Employee") {
+        navigate("/project-tracking-dashboard");
+      } else {
+        navigate("/project-table");
+      }
+    } catch (err) {
+      setError(err.message || "Login failed. Please try again.");
+    }
+  };
+
+  return (
+    <div className="login-container">
+      <div className="logo-container">
+        <img src={logo} alt="Logo" className="logo" />
+      </div>
+
+      <div className="login-form">
+        <h2>Login</h2>
+        {error && <p className="error-message">{error}</p>}
+
+        <form onSubmit={handleLogin}>
+          <input
+            type="email"
+            placeholder="Email ID"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input type="password" placeholder="Password (Optional)" disabled />
+
+          <button type="submit">Login</button>
+        </form>
+      </div>
+
+      <div className="image-container">
+        <img src={image1png} alt="Meditation" />
+      </div>
+    </div>
+  );
+};
+
+export default Login;

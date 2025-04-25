@@ -1,0 +1,313 @@
+html, body {
+    background-color: black !important;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    color: black;
+    font-family: Arial, sans-serif;
+  }
+  
+  #root {
+    background-color: black !important;
+    height: 100vh;
+    width: 100vw;
+  }
+  
+  /* Top-level container */
+  .containers {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    height: 100vh;
+    width: 100vw;
+    padding: 20px;
+    background-color: black !important;
+    box-sizing: border-box;
+  }
+  
+  /* Logo */
+  .logo-container {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 10;
+  }
+  
+  .logo {
+    width: 40px;
+    height: auto;
+  }
+  
+  /* Form container */
+  .form-containers {
+    margin-top: 60px;
+    width: 90%;
+    max-width: 1400px; /* Increased max-width */
+    height: calc(100vh - 80px);
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background-color: white;
+    border: 2px solid #ff7900;
+    border-radius: 8px;
+    z-index: 5;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Header section */
+  .header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eaeaea;
+  }
+  
+  .project-info {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .project-code {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: black;
+    margin: 0;
+  }
+  
+  .hours-info {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+  }
+  
+  .total, .rem {
+    font-size: 1.1rem;
+    margin: 0;
+    white-space: nowrap;
+  }
+  
+  .rem {
+    color: #ff7900;
+  }
+  
+  /* Search section - made more compact */
+.search-section {
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+  }
+  
+  .search {
+    border-radius: 8px;
+    height: 36px;
+    width: 100%;
+    max-width: 400px;
+    padding: 0 10px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+  }
+  
+  /* Search results */
+ /* Ensuring search results have a scrollbar */
+ .search-results {
+    max-height: 200px; /* You can adjust this value based on your preference */
+    overflow-y: auto;  /* Enables vertical scrollbar if content exceeds max height */
+    position: absolute; /* Keeps the dropdown under the search input */
+    width: 100%; /* Ensures the dropdown is aligned with the search input */
+    background-color: white; /* Make sure the background is visible */
+    border: 1px solid #ccc; /* Optional, to give a border to the search results */
+    z-index: 10; /* Ensures the dropdown appears on top of other elements */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Optional, to add some shadow to the dropdown */
+  }
+  
+  
+  /* Adjust the search input's parent container for better layout */
+  .search-section {
+    position: relative; /* Ensure the search results appear in the right place */
+  }
+  
+  
+  .search-results ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .search-results li {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eaeaea;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .search-results li:last-child {
+    border-bottom: none;
+  }
+  
+  .search-results button {
+    background-color: #ff7900;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  
+  .search-results button:hover {
+    background-color: #e66800;
+  }
+  
+  .selected-employee {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 10px;
+  }
+  
+  .selected-employee p {
+    margin: 0;
+    font-weight: bold;
+  }
+  
+  /* Action buttons */
+  .action-button {
+    background-color: #ff7900;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .action-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  
+  .action-button:hover:not(:disabled) {
+    background-color: #e66800;
+  }
+  
+  /* Table section - expanded to take most of the space */
+  .table-section {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0; /* Important for flex containers to respect child overflow */
+  }
+  
+  .table-heading {
+    margin: 0 0 10px 0;
+    font-size: 18px;
+  }
+  
+  .table-scroll-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    min-height: 0; /* Important for flex containers */
+  }
+  
+  .borders {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .borders thead th {
+    position: sticky;
+    top: 0;
+    background-color: #ff7900;
+    color: white;
+    padding: 12px 10px; /* Increased padding */
+    text-align: left;
+    font-weight: bold;
+    font-size: 15px; /* Increased font size */
+    z-index: 10;
+  }
+  
+  .borders tbody td {
+    padding: 12px 10px; /* Increased padding */
+    border-bottom: 1px solid #eaeaea;
+    font-size: 14px;
+  }
+  
+  .borders tbody tr:hover {
+    background-color: #f9f9f9;
+  }
+  
+  /* FTE inputs and actions */
+  .borders input[type="number"] {
+    width: 90px; /* Slightly wider */
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 14px;
+  }
+  
+  .table-actions {
+    display: flex;
+    gap: 6px;
+  }
+  
+  .table-actions button {
+    padding: 6px 10px;
+    font-size: 13px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: #f0f0f0;
+  }
+  
+  .table-actions button:hover {
+    background-color: #e0e0e0;
+  }
+  
+  /* Delegate styling */
+  .delegate-row {
+    background-color: #f5f5f5;
+    padding-left: 20px;
+  }
+  
+  .delegate-row td {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .delegated-hours {
+    font-size: 12px;
+    color: #666;
+  }
+  
+  /* Logout button */
+  .logout-button {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    background-color: #ff4d4d;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .logout-button:hover {
+    background-color: #ff1a1a;
+  }
+  
