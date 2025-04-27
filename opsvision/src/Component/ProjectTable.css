@@ -1,313 +1,388 @@
-html, body {
-    background-color: black !important;
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-    color: black;
-    font-family: Arial, sans-serif;
+/* General styling */
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #F3EFED !important;  /* Light background tone */
+  color: #585858;  /* Dark Grey text for readability */
+  margin: 0;
+  padding: 0;
+}
+
+.logo{
+  height: 50px;
+  width: 50px;
+}
+/* Table Wrapper */
+.table-wrapper {
+  margin: 0 auto;
+  width: 90%;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  max-height: 550px; /* Set max height to enable scrolling */
+  overflow-y: auto;   /* Enables vertical scrollbar */
+}
+
+.save-btn {
+  background-color: #ff7900;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+
+/* Sticky Table Header */
+.table thead th {
+  position: sticky;
+  top: 0;
+  background-color: #02080b;
+  color: rgb(239, 239, 240);
+  z-index: 1;
+}
+
+/* Table Styles */
+.table {
+  width: 100%;
+  margin-top: 20px;
+  border-collapse: collapse;
+  background-color: #FFFFFF;
+}
+.search-container {
+display: flex;
+justify-content: center;
+align-items: center;
+margin-top: -60px;
+margin-bottom: 20px;
+margin-left: 1000px;
+}
+
+.search-bar {
+width: 100%;
+max-width: 280px; /* Adjust this value as needed */
+padding: 10px;
+font-size: 16px;
+border: 1px solid #ccc;
+border-radius: 5px;
+outline: none;
+transition: border-color 0.3s ease;
+}
+
+.search-bar:focus {
+border-color: #4CAF50; /* Change to the desired color on focus */
+box-shadow: 0 0 8px rgba(76, 175, 80, 0.3); /* Optional glow effect */
+}
+
+.search-bar::placeholder {
+color: #888; /* Placeholder text color */
+font-style: italic;
+}
+
+.search-container .search-bar {
+margin-right: 10
+}
+
+
+/* Title section */
+.container h1 {
+
+background-color:#FF7900 ;
+  color: #FFFFFF;  /* White text for contrast */
+  padding: 12px;
+  text-align: center;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(255, 121, 0, 0.3);
+  font-size: 26px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: transform 0.3s ease;
+  margin-top: 30px;
+  width: 900px;
+  margin-left: 120px;
+}
+
+.container h1:hover {
+  transform: scale(1.02);
+}
+
+/* Flex container to hold Project Management Box and GIF side by side */
+.project-container {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 20px;  /* Space between the box and the gif */
+  margin-top: 20px;
+}
+
+.project-link{
+  color: #FF7900 !important;
+}
+
+/* Project Management Box */
+.project-box {
+  background-color: #FFFFFF;
+  box-shadow: 0 4px 15px rgba(255, 121, 0, 0.2);
+  border-radius: 8px;
+  padding: 15px;
+  width: 70%;  /* Adjust width to make the box a bit smaller */
+  max-width: 600px;  /* Adjust max-width for compactness */
+  transition: all 0.3s ease;
+}
+
+.project-box:hover {
+  box-shadow: 0 6px 20px rgba(255, 121, 0, 0.4);
+}
+
+/* Project Management Header */
+.project-box h2 {
+  color: #FF7900;  /* Dark Blue for titles */
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+/* Table headers */
+.table th, .table td {
+  padding: 12px;
+  font-size: 14px;
+  text-align: center;
+  border-bottom: 1px solid #ccc;
+}
+
+/* Project Titles */
+.table td:nth-child(1) {
+  color: #FF7900; /* Using the same orange for project codes */
+  font-weight: bold;
+}
+
+/* Pagination Styles */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.pagination-button {
+  background-color: #FF7900;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  margin: 0 5px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.pagination-button:hover {
+  background-color: #FF4500;
+}
+
+.pagination-button:disabled {
+  background-color: #ddd;
+  cursor: not-allowed;
+}
+
+/* Table body */
+.table td {
+  padding: 12px;
+  font-size: 14px;
+  text-align: center;
+  color: #585858;
+  border-bottom: 1px solid #444;
+  transition: background-color 0.3s ease;
+}
+
+/* Keep Specific Columns White */
+.table td:nth-child(1),  /* Project Code */
+.table td:nth-child(2),  /* Expiration Date */
+.table td:nth-child(3),  /* Allocated FTE */
+.table td:nth-child(4) { /* Allocated Hours */
+  background-color: #FFFFFF;
+  color: #000000;
+  font-weight: bold;
+}
+
+/* Alternate row colors */
+.table tbody tr:nth-child(even) {
+  background-color:#FFFFFF;
+}
+
+.table tbody tr:hover {
+  background-color: rgba(248, 247, 246, 0.954);
+  transition: background-color 0.3s ease-in-out;
+}
+
+/* Input field for FTE */
+.table input[type="number"] {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  text-align: center;
+  border: 2px solid #FF7900;
+  border-radius: 8px;
+  background-color: #E7E0E0;
+  color: #050505;
+  transition: all 0.3s ease-in-out;
+  width: 80px;
+  height: 35px;
+  margin-left: 70px;
+}
+
+.a {
+  color: #ff7900;
+  text-decoration: none;
+  background-color: transparent;
+}
+
+.table input[type="number"]:focus {
+  background-color: #D5CECE;
+  border-color: #FF4500;
+  outline: none;
+  box-shadow: 0 0 10px rgba(255, 102, 0, 0.5);
+}
+
+/* Action icons */
+.icon {
+  cursor: pointer;
+  color: #FF7900;
+  font-size: 22px;
+  transition: transform 0.2s ease, color 0.3s ease;
+}
+
+.icon:hover {
+  color: #FF4500;
+  transform: scale(1.2);
+}
+
+.project-container {
+  text-align: center;
+  padding: 20px;
+}
+
+/* Flex container to align table (left) and GIF (right) */
+.content-container {
+  display: flex;
+  justify-content: space-between; /* Table stays left, GIF moves to right */
+  align-items: center;
+  margin-top: 20px;
+}
+
+/* Table stays on the left */
+.table-container {
+  flex: 2;  /* Takes more space */
+  text-align: left;
+}
+
+/* GIF moves to the right */
+.gif-container {
+  flex: 1;  /* Takes less space */
+  display: flex;
+  justify-content: flex-end;  /* Aligns GIF to the right */
+  align-items: center;
+}
+
+/* Adjust GIF size */
+.project-gif {
+  max-width: 250px;  /* Resize as needed */
+  height: auto;
+}
+
+
+/* Buttons */
+.btn {
+  background: linear-gradient(135deg, #FF7900, #FFBA00);
+  color: #FFFFFF;
+  border: none;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 4px 10px rgba(255, 121, 0, 0.2);
+}
+
+.btn:hover {
+  background: linear-gradient(135deg, #FF4500, #B33900);
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(255, 102, 0, 0.4);
+}
+
+/* Disabled buttons */
+button:disabled, .form-control:disabled {
+  background-color: #EEE6E6;
+  color: #9d9797;
+  cursor: not-allowed;
+  border: none;
+}
+
+/* Add styles to position the image */
+.image-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.illus-image {
+  max-width: 300px; /* Adjust size as needed */
+  height: auto;
+}
+
+.link-container {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.link-container .btn {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+}
+
+.link-container .btn:hover {
+  background-color: #0056b3;
+}
+
+
+
+/* Responsive table */
+@media (max-width: 768px) {
+  .table {
+      font-size: 12px;
   }
-  
-  #root {
-    background-color: black !important;
-    height: 100vh;
-    width: 100vw;
+
+  .table th, .table td {
+      padding: 10px;
+      font-size: 12px;
   }
-  
-  /* Top-level container */
-  .containers {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    height: 100vh;
-    width: 100vw;
-    padding: 20px;
-    background-color: black !important;
-    box-sizing: border-box;
+
+  .container h1 {
+      font-size: 20px;
+      padding: 15px;
   }
-  
-  /* Logo */
-  .logo-container {
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    z-index: 10;
+
+  .btn {
+      font-size: 12px;
+      padding: 8px 12px;
   }
-  
-  .logo {
-    width: 40px;
-    height: auto;
+
+  .icon {
+      font-size: 18px;
   }
-  
-  /* Form container */
-  .form-containers {
-    margin-top: 60px;
-    width: 90%;
-    max-width: 1400px; /* Increased max-width */
-    height: calc(100vh - 80px);
-    padding: 1.5rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    background-color: white;
-    border: 2px solid #ff7900;
-    border-radius: 8px;
-    z-index: 5;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
+
+  .project-box {
+      width: 95%;  /* More compact layout on smaller screens */
   }
-  
-  /* Header section */
-  .header-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eaeaea;
+
+  .project-box h2 {
+      font-size: 18px;
   }
-  
-  .project-info {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    justify-content: space-between;
+
+  .project-container {
+      flex-direction: column;  /* Stack vertically on smaller screens */
   }
-  
-  .project-code {
-    font-size: 1.3rem;
-    font-weight: bold;
-    color: black;
-    margin: 0;
-  }
-  
-  .hours-info {
-    display: flex;
-    align-items: center;
-    gap: 30px;
-  }
-  
-  .total, .rem {
-    font-size: 1.1rem;
-    margin: 0;
-    white-space: nowrap;
-  }
-  
-  .rem {
-    color: #ff7900;
-  }
-  
-  /* Search section - made more compact */
-.search-section {
-    margin-bottom: 15px;
-    display: flex;
-    flex-direction: column;
-    max-width: 100%;
-  }
-  
-  .search {
-    border-radius: 8px;
-    height: 36px;
-    width: 100%;
-    max-width: 400px;
-    padding: 0 10px;
-    border: 1px solid #ccc;
-    font-size: 14px;
-  }
-  
-  /* Search results */
- /* Ensuring search results have a scrollbar */
- .search-results {
-    max-height: 200px; /* You can adjust this value based on your preference */
-    overflow-y: auto;  /* Enables vertical scrollbar if content exceeds max height */
-    position: absolute; /* Keeps the dropdown under the search input */
-    width: 100%; /* Ensures the dropdown is aligned with the search input */
-    background-color: white; /* Make sure the background is visible */
-    border: 1px solid #ccc; /* Optional, to give a border to the search results */
-    z-index: 10; /* Ensures the dropdown appears on top of other elements */
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Optional, to add some shadow to the dropdown */
-  }
-  
-  
-  /* Adjust the search input's parent container for better layout */
-  .search-section {
-    position: relative; /* Ensure the search results appear in the right place */
-  }
-  
-  
-  .search-results ul {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-  }
-  
-  .search-results li {
-    padding: 8px 12px;
-    border-bottom: 1px solid #eaeaea;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .search-results li:last-child {
-    border-bottom: none;
-  }
-  
-  .search-results button {
-    background-color: #ff7900;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 4px 8px;
-    cursor: pointer;
-    font-size: 12px;
-  }
-  
-  .search-results button:hover {
-    background-color: #e66800;
-  }
-  
-  .selected-employee {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-top: 10px;
-  }
-  
-  .selected-employee p {
-    margin: 0;
-    font-weight: bold;
-  }
-  
-  /* Action buttons */
-  .action-button {
-    background-color: #ff7900;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 8px 12px;
-    cursor: pointer;
-    font-size: 14px;
-  }
-  
-  .action-button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-  }
-  
-  .action-button:hover:not(:disabled) {
-    background-color: #e66800;
-  }
-  
-  /* Table section - expanded to take most of the space */
-  .table-section {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0; /* Important for flex containers to respect child overflow */
-  }
-  
-  .table-heading {
-    margin: 0 0 10px 0;
-    font-size: 18px;
-  }
-  
-  .table-scroll-wrapper {
-    flex: 1;
-    overflow-y: auto;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: white;
-    min-height: 0; /* Important for flex containers */
-  }
-  
-  .borders {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .borders thead th {
-    position: sticky;
-    top: 0;
-    background-color: #ff7900;
-    color: white;
-    padding: 12px 10px; /* Increased padding */
-    text-align: left;
-    font-weight: bold;
-    font-size: 15px; /* Increased font size */
-    z-index: 10;
-  }
-  
-  .borders tbody td {
-    padding: 12px 10px; /* Increased padding */
-    border-bottom: 1px solid #eaeaea;
-    font-size: 14px;
-  }
-  
-  .borders tbody tr:hover {
-    background-color: #f9f9f9;
-  }
-  
-  /* FTE inputs and actions */
-  .borders input[type="number"] {
-    width: 90px; /* Slightly wider */
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    text-align: center;
-    font-size: 14px;
-  }
-  
-  .table-actions {
-    display: flex;
-    gap: 6px;
-  }
-  
-  .table-actions button {
-    padding: 6px 10px;
-    font-size: 13px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    background-color: #f0f0f0;
-  }
-  
-  .table-actions button:hover {
-    background-color: #e0e0e0;
-  }
-  
-  /* Delegate styling */
-  .delegate-row {
-    background-color: #f5f5f5;
-    padding-left: 20px;
-  }
-  
-  .delegate-row td {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  
-  .delegated-hours {
-    font-size: 12px;
-    color: #666;
-  }
-  
-  /* Logout button */
-  .logout-button {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    background-color: #ff4d4d;
-    color: white;
-    padding: 8px 12px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-  }
-  
-  .logout-button:hover {
-    background-color: #ff1a1a;
-  }
-  
+}

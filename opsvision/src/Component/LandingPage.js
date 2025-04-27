@@ -9,13 +9,29 @@ const LandingPage = () => {
   const [showProfileName, setShowProfileName] = useState(false);
   const [userName, setUserName] = useState("");
   const [userRole, setUserRole] = useState("");
+  const [isLoading, setIsLoading] = useState(true); // Loading state
 
   useEffect(() => {
     const name = localStorage.getItem("name") || "John Doe";
     const role = localStorage.getItem("role") || "";
     setUserName(name);
     setUserRole(role);
+    setIsLoading(false); // Set loading to false after fetching user data
   }, []);
+
+  useEffect(() => {
+    // Check if the user is authenticated and has a valid role
+    if (!isLoading) {
+      if (!userRole) {
+        navigate("/login"); // Redirect to login if no role is found
+      } else if (userRole === "VerticalLead" || userRole === "ProjectManager" || userRole === "Admin") {
+        // Redirect to project table if the user has the right role and is on the root path
+        if (window.location.pathname === "/") {
+          navigate("/project-table");
+        }
+      }
+    }
+  }, [isLoading, userRole, navigate]);
 
   const toggleProfile = () => {
     setShowProfileName(!showProfileName);
@@ -29,6 +45,11 @@ const LandingPage = () => {
 
   const showPrimeManagement = userRole === "VerticalLead" || userRole === "ProjectManager" || userRole === "Admin";
   const showEmployeeManagement = userRole === "Employee" || showPrimeManagement;
+
+  // Show loading state while fetching user data
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="landing-page">
@@ -46,10 +67,11 @@ const LandingPage = () => {
           {showPrimeManagement && (
             <div className="mod">
               <li>
-                <Link to="/project-table">Prime Management</Link>
+                
+                <Link to="/project-table" target= "_blank" onClick={(e) => e.stopPropagation()}>Prime Management</Link>
               </li>
               <li>
-                <Link to="/dashboard"> My Dasboard</Link>
+                <Link to="/dashboard" onClick={(e) => e.stopPropagation()}>My Dashboard</Link>
               </li>
             </div>
           )}
@@ -57,7 +79,7 @@ const LandingPage = () => {
           {showEmployeeManagement && !showPrimeManagement && (
             <div className="mod">
               <li>
-                <Link to="/dashboard">Employee Management</Link>
+                <Link to="/dashboard" onClick={(e) => e.stopPropagation()}>Employee Management</Link>
               </li>
             </div>
           )}
@@ -80,3 +102,4 @@ const LandingPage = () => {
 };
 
 export default LandingPage;
+

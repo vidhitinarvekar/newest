@@ -33,6 +33,8 @@ body {
 /* Logo */
 .logo {
   height: 50px;
+  width: 50px;
+
 }
 
 /* Logout button fixed to top-right */

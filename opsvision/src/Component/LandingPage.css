@@ -6,6 +6,10 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   position: relative; /* 🆕 So top-right-profile stays within this layout */
 }
+.logo{
+  height: 50px;
+  width: 50px;
+}
 
 .sidebar {
   width: 250px;
@@ -44,7 +48,7 @@
 
 .logout-button {
   padding: 10px 20px;
-  background-color: #e74c3c;
+  background-color: #FF7900;
   color: white;
   border: none;
   border-radius: 4px;
@@ -54,7 +58,7 @@
 }
 
 .logout-button:hover {
-  background-color: #c0392b;
+  background-color: #FF7900;
 }
 
 .main-content {

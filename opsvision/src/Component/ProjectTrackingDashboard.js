@@ -124,7 +124,7 @@ class ProjectTrackingDashboard extends Component {
                         <table className="project-table">
                             <thead>
                                 <tr>
-                                    <th>Project Code</th>
+                                    <th>Assigned By</th>
                                     <th>Project Name</th>
                                     <th>Allocated Hours</th>
                                     <th>Committed Hours</th>
@@ -135,7 +135,7 @@ class ProjectTrackingDashboard extends Component {
                             <tbody>
                                 {projects.map((project, index) => (
                                     <tr key={index}>
-                                        <td>{project.projectId}</td>
+                                        <td>{project.assignedBy}</td>
                                         <td>{project.projectName}</td>
                                         <td>{project.allocatedHours}</td>
                                         <td>
