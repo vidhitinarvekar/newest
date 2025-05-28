@@ -1,13 +1,14 @@
 import React, { Component } from 'react';
-import './ProjectTrackingDashboard.css';
+import './Manager.css';
 import logo from './images.png';
+import axios from "axios";
 import illustration from './illus.png';
 import secureAxios from './utils/secureAxios';
 import withNavigation from './withNavigation'; // Import the withNavigation HOC
 import homeIcon from "./home.png";
 
 
-class ProjectTrackingDashboard extends Component {
+class Manager extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -28,7 +29,7 @@ class ProjectTrackingDashboard extends Component {
 
     fetchProjects = async () => {
         try {
-            const response = await secureAxios.get("/api/ProjectFteManagement/self-assigned-projects");
+            const response = await secureAxios.get("/api/ProjectFteManagement/my-assigned-projects/exclude-self");
             const projectsData = response.data;
     
             const staffId = localStorage.getItem('staffId');
@@ -39,33 +40,42 @@ class ProjectTrackingDashboard extends Component {
     
             const projectsWithHours = await Promise.all(
                 projectsData.map(async proj => {
-                    let lastCommittedHours = 0;
-                    try {
-                        const committedRes = await secureAxios.get("/api/ProjectManagement/get-committed-hours", {
-                            params: {
-                                projectId: proj.projectId,
-                                staffId: staffId
-                            }
-                        });
-                        lastCommittedHours = committedRes.data?.committedHours || 0;
+                  let lastCommittedHours = 0;
+                  let totalCommittedHours = 0;
+              
+                  try {
+                    const committedRes = await secureAxios.get("/api/ProjectManagement/get-committed-hours", {
+                      params: {
+                        projectId: proj.projectId,
+                        staffId: staffId
+                      }
+                    });
+                    lastCommittedHours = committedRes.data?.committedHours || 0;
+                  } catch (err) {
+                    console.warn(`Failed to fetch last committed hours for project ${proj.projectId}:`, err);
+                  }
+              
+                  try {
+                    const totalCommittedRes = await axios.get(`https://localhost/api/ProjectFteManagement/project/${proj.projectId}/committed-hours`);
+                    totalCommittedHours = totalCommittedRes.data?.totalCommittedHours || 0;
+                  } catch (err) {
+                    console.warn(`Failed to fetch total committed hours for project ${proj.projectId}:`, err);
+                  }
+              
+                  return {
+                    projectId: proj.projectId || "N/A",
+                    primeCode: proj.primeCode || "N/A",
+                    allocatedHours: proj.allocatedHours ?? 0,
+                    assignedBy: proj.assignedByName || "Unknown",
+                    committedHours: totalCommittedHours, // use this as readonly committed hours
+                    inputHours: totalCommittedHours,     // default same as above
+                    remainingHrs: proj.allocatedHours - lastCommittedHours,
 
-                    } catch (err) {
-                        console.warn(`Failed to fetch committed hours for project ${proj.projectId}:`, err);
-                    }
-    
-                    return {
-                        projectId: proj.projectId || "N/A",
-                        primeCode: proj.primeCode || "N/A",
-                        allocatedHours: proj.allocatedHours ?? 0,
-                        committedHours: proj.committedHours || 0,
-                        inputHours: proj.committedHours || 0,
-                        remainingHrs: Math.max(0, (proj.allocatedHours ?? 0) - lastCommittedHours),
-
-                        delegatedByName:proj.delegatedByName || "N/A",
-                        lastCommittedHours: lastCommittedHours // now correctly set from API
-                    };
+                    lastCommittedHours: lastCommittedHours
+                  };
                 })
-            );
+              );
+              
     
             this.setState({ projects: projectsWithHours });
     
@@ -108,8 +118,6 @@ if (totalCommitted > project.allocatedHours) {
     alert(`Total committed hours (${totalCommitted}) exceed allocated hours (${project.allocatedHours}).`);
     return;
 }
-
-
         const staffId = localStorage.getItem('staffId');
         if (!staffId) {
             alert("Staff ID not found. Please log in again.");
@@ -124,14 +132,15 @@ if (totalCommitted > project.allocatedHours) {
                 completedHours: 0
             }
         };
+        
 
         const isFirstEntry = project.committedHours === 0;
 
         try {
             const response = await secureAxios[isFirstEntry ? 'post' : 'put'](
                 isFirstEntry
-                    ? "/api/ProjectFteManagement/commit-hours"
-                    : "/api/ProjectFteManagement/commit-hours",
+                ? "/api/ProjectFteManagement/commit-hours"
+                : "/api/ProjectFteManagement/commit-hours",
                 requestBody
             );
 
@@ -161,16 +170,16 @@ if (totalCommitted > project.allocatedHours) {
 
         return (
             <div className="dashboard-container">
-                <div className="header-containerr">
+                <div className="hheader-container">
                     <img src={logo} alt="Orange Business Logo" className="logo" />
-                    <h1 className="namme">Self-Assigned Tasks</h1>
+                    <h1 className="name">My Prime</h1>
                     <button onClick={this.logout} title="Logout" className="logout-button">Logout</button>
                 </div>
-               <div className="home-icon-containerss" title="Go to Homepage" onClick={() => this.props.navigate("/landing")}>
-                  <h className="hm">Home</h>
+               <div className="home-icon-containerss"  title="Go to Homepage" onClick={() => this.props.navigate("/landing")}>
+               <h className="hm">Home</h>
                   {/* <img src={homeIcon} alt="Home" className="home-iconss" /> */}
                 </div>
-
+{/* <h1 className="instr">Select a PrimeCode to Begin Assignment</h1> */}
                 <div className="content-container">
                     <div className="table-container">
                         <table className="project-table">
@@ -180,7 +189,7 @@ if (totalCommitted > project.allocatedHours) {
                                     <th>PrimeCode</th>
                                     <th>Allocated Hours</th>
                                     <th>Committed Hours</th>
-                                    {/* <th>Your Last committed</th> */}
+                                    <th>Your committed</th>
                                     <th>Remaining Hours</th>
                                     <th>Actions</th>
                                 </tr>
@@ -188,10 +197,28 @@ if (totalCommitted > project.allocatedHours) {
                             <tbody>
                                 {projects.map((project, index) => (
                                     <tr key={index}>
-                                        <td>{project.delegatedByName}</td>
+                                        <td>{project.assignedBy}</td>
                                         <td>
-                                                {project.primeCode}
-                                            
+                                            {this.role === "Manager" ? (
+                                                <span
+                                                    className="project-link"
+                                                    onClick={() =>
+                                                        this.props.navigate(`/delegate/${project.projectId}`, {
+                                                            state: {
+                                                                primeCode: project.primeCode,
+                                                                allocatedHours: project.allocatedHours,
+                                                                projectId: project.projectId,
+                                                                remainingHrs:project.remainingHrs,
+                                                            },
+                                                        })
+                                                    }
+                                                    style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
+                                                >
+                                                    {project.primeCode}
+                                                </span>
+                                            ) : (
+                                                <span>{project.primeCode}</span>
+                                            )}
                                         </td>
                                         <td>{project.allocatedHours}</td>
                                         <td>
@@ -210,11 +237,11 @@ if (totalCommitted > project.allocatedHours) {
                                                     className="editable-box"
                                                     onClick={() => this.setState({ editingIndex: index })}
                                                 >
-                                                    {project.lastCommittedHours}
+                                                    {project.committedHours}
                                                 </div>
                                             )}
                                         </td>
-                                        {/* <td>{project.lastCommittedHours}</td> */}
+                                        <td>{project.lastCommittedHours}</td>
                                         <td>{project.remainingHrs}</td>
 
                                         <td>
@@ -237,4 +264,4 @@ if (totalCommitted > project.allocatedHours) {
     }
 }
 
-export default withNavigation(ProjectTrackingDashboard);
+export default withNavigation(Manager);

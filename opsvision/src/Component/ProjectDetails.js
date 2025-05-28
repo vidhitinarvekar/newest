@@ -1,23 +1,28 @@
+
+
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { deleteProjectFte } from "../Services/api";
 import "./ProjectDetails.css";
 import logo from "./images.png";
+import homeIcon from "./home.png";
+import back from "./backs.png";
 
 export default function ProjectDetails() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const searchResultsRef = useRef(null);
   const searchInputRef = useRef(null);
- 
+
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [allocatedFTEs, setAllocatedFTEs] = useState([]);
   const [selectedFte, setSelectedFte] = useState(null);
   const [fteHours, setFteHours] = useState({});
   const [newFTEs, setNewFTEs] = useState([]);
-  const [totalHours, setTotalHours] = useState(0);
+  // const [totalHours, setTotalHours] = useState(0);
+  const [totalHours, setTotalHours] = useState(0); // For total hours
   const [remainingHours, setRemainingHours] = useState(0);
   const [projectName, setProjectName] = useState("");
   const [primeCode, setPrimeCode] = useState("");
@@ -25,11 +30,13 @@ export default function ProjectDetails() {
   const [delegates, setDelegates] = useState({});
   const [delegatedHours, setDelegatedHours] = useState({});
   const [showSearchResults, setShowSearchResults] = useState(false);
-  const [committedHours, setCommittedHours] = useState({}); // New state for committed hours
+  const [committedHours, setCommittedHours] = useState({});
 
   const fetchAssignedFTEs = async () => {
     if (!projectId) return;
+
     try {
+      // Fetching project-specific data (assigned FTEs)
       const response = await axios.get(`https://localhost:443/api/ProjectFteEmployee/${projectId}`);
       const { assignedEmployees, remainingHours, projectName, primeCode } = response.data;
 
@@ -50,19 +57,29 @@ export default function ProjectDetails() {
       });
       setFteHours(initialHours);
       setDelegates({});
-     
-      await fetchAllCommittedHours(assignedEmployees); // Fetch committed hours after fetching allocated FTEs
+
+      await fetchAllCommittedHours(assignedEmployees);
+
+      // Now, let's fetch the total allocated hours for the specific project
+      const allProjectsResponse = await axios.get("https://localhost/api/ProjectFte/all");
+      const projectData = allProjectsResponse.data.find(
+        (project) => project.projectId === parseInt(projectId)
+      );
+      if (projectData) {
+        setTotalHours(projectData.allocatedHours || 0); // Update total hours from the fetched data
+      }
+
     } catch (error) {
       console.error("Error fetching project data:", error);
     }
   };
 
-  const fetchCommittedHours = async (staffId) => {
+  const fetchCommittedHours = async (staffId, projectId) => {
     try {
-      const response = await axios.get(`https://localhost/api/ProjectManagement/get-committed-hours`, {
-        params: { projectId, staffId }
+      const response = await axios.get(`https://localhost/api/ProjectFteManagement/project/${projectId}/committed-hours`, {
+        params: { projectId, managerStaffId: staffId }
       });
-      return response.data.committedHours || 0;
+      return response.data.managerTeamTotal || 0;
     } catch (error) {
       console.error("Error fetching committed hours:", error);
       return 0;
@@ -72,7 +89,8 @@ export default function ProjectDetails() {
   const fetchAllCommittedHours = async (assignedEmployees) => {
     const hours = {};
     for (const fte of assignedEmployees) {
-      const committedHour = await fetchCommittedHours(fte.staffId);
+      const committedHour = await fetchCommittedHours(fte.staffId, projectId);
+
       hours[fte.staffId] = committedHour;
     }
     setCommittedHours(hours);
@@ -90,7 +108,7 @@ export default function ProjectDetails() {
         return;
       }
       try {
-        const response = await axios.get(`https://localhost:443/api/ProjectFteEmployee/search`, {
+        const response = await axios.get(`https://localhost/api/ProjectFteEmployee/searchs`, {
           params: { searchTerm: searchQuery },
         });
         setSearchResults(response.data);
@@ -105,136 +123,159 @@ export default function ProjectDetails() {
 
   useEffect(() => {
     function handleClickOutside(event) {
-      if (searchResultsRef.current && !searchResultsRef.current.contains(event.target) && searchInputRef.current && !searchInputRef.current.contains(event.target)) {
+      if (searchResultsRef.current && !searchResultsRef.current.contains(event.target) &&
+        searchInputRef.current && !searchInputRef.current.contains(event.target)) {
         setShowSearchResults(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleSelectFTE = (fte) => {
     if (delegateFor) {
-      setDelegates((prev) => ({ ...prev, [delegateFor.staffId]: [...(prev[delegateFor.staffId] || []), fte], }));
+      setDelegates((prev) => ({
+        ...prev,
+        [delegateFor.staffId]: [...(prev[delegateFor.staffId] || []), fte],
+      }));
       setDelegateFor(null);
-      setSelectedFte(null);
     } else {
-      setSelectedFte(fte);
+      const alreadyAssigned = allocatedFTEs.some((existingFte) => existingFte.staffId === fte.staffId);
+      if (alreadyAssigned) {
+        alert("This employee is already assigned.");
+        return;
+      }
+
+      const newFteEntry = {
+        staffId: fte.staffId,
+        firstName: fte.firstName,
+        lastName: fte.lastName,
+        email: fte.email,
+        allocatedHours: 0,
+      };
+
+      setNewFTEs((prev) => [newFteEntry, ...prev]);
+      setAllocatedFTEs((prev) => [newFteEntry, ...prev]);
+      setFteHours((prev) => ({ ...prev, [newFteEntry.staffId]: "" }));
     }
+
+    setSelectedFte(null);
     setSearchQuery("");
     setShowSearchResults(false);
   };
 
-  const calculateCurrentRemainingHours = () => {
+  const calculateCurrentRemainingHours = (excludeStaffId = null) => {
     const totalMainAllocated = allocatedFTEs.reduce((sum, fte) => {
+      if (fte.staffId === excludeStaffId) return sum; // exclude current staff
       const inputHours = Number(fteHours[fte.staffId]);
       return sum + (isNaN(inputHours) ? 0 : inputHours);
     }, 0);
+
     return Math.max(0, totalHours - totalMainAllocated);
   };
 
-  const handleAddFTE = () => {
-    if (!selectedFte) return alert("Please select an employee first.");
-    const alreadyAssigned = allocatedFTEs.some((fte) => fte.staffId === selectedFte.staffId);
-    if (alreadyAssigned) return alert("This employee is already assigned.");
 
-    const newFteEntry = {
-      staffId: selectedFte.staffId,
-      firstName: selectedFte.firstName,
-      lastName: selectedFte.lastName,
-      email: selectedFte.email,
-      allocatedHours: 0,
-    };
-
-    setNewFTEs((prev) => [newFteEntry, ...prev]);
-    setAllocatedFTEs((prev) => [newFteEntry, ...prev]);
-    setFteHours((prev) => ({ ...prev, [newFteEntry.staffId]: "" }));
-    setSelectedFte(null);
-  };
+  const isManager = localStorage.getItem("role") === "manager";
 
   const handleSaveFTE = async (staffId) => {
     try {
+      console.log("🔹 Save FTE initiated for Staff ID:", staffId);
+
       const allocatedHours = Number(fteHours[staffId]);
-      if (!allocatedHours || allocatedHours <= 0) return alert("Allocated hours must be greater than 0.");
-      if (allocatedHours > calculateCurrentRemainingHours()) return alert("Not enough remaining hours.");
-      const payload = { projectId, staffId, allocatedHours ,delegatees: []};
-      await axios.post(`https://localhost:443/api/ProjectFteEmployee/allocate`, payload);
-      alert("New FTE added.");
+      console.log("📊 Allocated Hours:", allocatedHours);
+
+      const delegateeList = (delegates[staffId] || [])
+        .filter((delegate) => Number(delegatedHours[staffId]?.[delegate.staffId]) > 0)
+        .map((delegate) => ({
+          staffId: delegate.staffId,
+          staffName: `${delegate.firstName} ${delegate.lastName}`,
+          allocatedHours: Number(delegatedHours[staffId]?.[delegate.staffId]),
+        }));
+      console.log("👥 Delegatees:", delegateeList);
+
+      if (!isManager && (!allocatedHours || allocatedHours <= 0)) {
+        alert("Allocated hours must be greater than 0.");
+        console.warn("❌ Invalid allocated hours for non-manager.");
+        return;
+      }
+
+      const remaining = calculateCurrentRemainingHours(staffId);
+
+      console.log("🧮 Remaining Hours:", remaining);
+
+      if (!isManager && allocatedHours > remaining) {
+        alert("Not enough remaining hours.");
+        console.warn("❌ Allocated hours exceed remaining.");
+        return;
+      }
+
+      const payload = {
+        projectId: Number(projectId),
+        primeCode,
+        staffId: isManager ? 0 : staffId,
+        allocatedHours: isManager ? 0 : allocatedHours,
+        delegatees: delegateeList,
+      };
+
+      console.log("📤 Sending payload to API:", payload);
+
+      const response = await axios.post("https://localhost/api/ProjectFteEmployee/allocate", payload);
+      console.log("✅ Save response:", response);
+
+      // Clean up after successful save
       setNewFTEs((prev) => prev.filter((fte) => fte.staffId !== staffId));
       fetchAssignedFTEs();
+
+
     } catch (error) {
-      console.error("Error saving FTE:", error);
+      console.error("❌ Error saving FTE:", error);
+      alert("Failed to save FTE. Please check your input and try again.");
     }
+
+
   };
 
-  const totalCommittedHours =Object.values(committedHours).reduce((sum,hours)=> sum + hours,0);
 
   const handleUpdateFTE = async (staffId) => {
     try {
       const allocatedHours = Number(fteHours[staffId]);
-      if (!allocatedHours || allocatedHours <= 0) return alert("Allocated hours must be greater than 0.");
-      if (allocatedHours > calculateCurrentRemainingHours()) return alert("Not enough remaining hours.");
-      const payload = { projectId, staffId, allocatedHours,delegatees: [] };
-      await axios.put(`https://localhost:443/api/ProjectFteEmployee/update`, payload);
-      alert("FTE updated.");
+
+      const delegateeList = (delegates[staffId] || [])
+        .filter((delegate) => Number(delegatedHours[staffId]?.[delegate.staffId]) > 0)
+        .map((delegate) => ({
+          staffId: delegate.staffId,
+          staffName: `${delegate.firstName} ${delegate.lastName}`,
+          allocatedHours: Number(delegatedHours[staffId]?.[delegate.staffId]),
+        }));
+
+      if (!isManager && (!allocatedHours || allocatedHours <= 0))
+        return alert("Allocated hours must be greater than 0.");
+
+      if (!isManager && allocatedHours > calculateCurrentRemainingHours(staffId)) {
+        return alert("Not enough remaining hours.");
+      }
+
+
+      const payload = {
+        projectId: Number(projectId),
+        primeCode,
+        staffId: isManager ? 0 : staffId,
+        allocatedHours: isManager ? 0 : allocatedHours,
+        delegatees: delegateeList,
+      };
+
+      await axios.put("https://localhost/api/ProjectFteEmployee/update", payload);
       fetchAssignedFTEs();
     } catch (error) {
       console.error("Error updating FTE:", error);
+      alert("Failed to update FTE.");
     }
   };
-
-  const handleSaveDelegates = async (mainFteId) => {
-    try {
-      const allocatedHours= fteHours[mainFteId] || 0;
-    
-      // Prepare delegatees from the delegates state
-      const delegatees = delegates[mainFteId]?.map(delegate => ({
-        staffId: delegate.staffId,
-        staffName: `${delegate.firstName} ${delegate.lastName}`,
-        allocatedHours: delegatedHours[mainFteId]?.[delegate.staffId] || 0, // Get allocated hours for the delegate
-      })) || [];
-  
-      const payload = { projectId, primeCode, staffId : mainFteId, allocatedHours, delegatees }; // Set allocatedHours to 0 for delegates
-      await axios.post(`https://localhost:443/api/ProjectFteEmployee/allocate`, payload);
-      alert("Delegates saved successfully.");
-      
-      setDelegates((prev) => ({
-        ...prev,
-        [mainFteId]:delegatees,
-      }));
-      fetchAssignedFTEs(); // Refresh the assigned FTEs
-    } catch (error) {
-      console.error("Error saving delegates:", error);
-    }
-  };
-  
-  const UpdateDelegates = async (mainFteId) => {
-    try {
-      const allocatedHours= fteHours[mainFteId] || 0;
-    
-      // Prepare delegatees from the delegates state
-      const delegatees = delegates[mainFteId]?.map(delegate => ({
-        staffId: delegate.staffId,
-        staffName: `${delegate.firstName} ${delegate.lastName}`,
-        allocatedHours: delegatedHours[mainFteId]?.[delegate.staffId] || 0, // Get allocated hours for the delegate
-      })) || [];
-  
-      const payload = { projectId, primeCode, staffId : mainFteId, allocatedHours, delegatees }; // Set allocatedHours to 0 for delegates
-      await axios.post(`https://localhost:443/api/ProjectFteEmployee/update`, payload);
-      alert("Delegates saved successfully.");
-      fetchAssignedFTEs(); // Refresh the assigned FTEs
-    } catch (error) {
-      console.error("Error saving delegates:", error);
-    }
-  };
-  
 
   const handleDeleteFTE = async (staffId) => {
     try {
       await deleteProjectFte(projectId, staffId);
-      alert("FTE deleted.");
+      // alert("FTE deleted.");
       setAllocatedFTEs((prev) => prev.filter((fte) => fte.staffId !== staffId));
       fetchAssignedFTEs();
     } catch (error) {
@@ -249,7 +290,7 @@ export default function ProjectDetails() {
   };
 
   const handleDelegateHoursChange = (mainFteId, delegateFteId, hours) => {
-    setDelegatedHours((prev) => ({ ...prev, [mainFteId]: { ...prev[mainFteId], [delegateFteId]: hours }, }));
+    setDelegatedHours((prev) => ({ ...prev, [mainFteId]: { ...prev[mainFteId], [delegateFteId]: hours } }));
     const remainingHours = Number(fteHours[mainFteId]) - hours;
     setFteHours((prev) => ({
       ...prev,
@@ -260,27 +301,45 @@ export default function ProjectDetails() {
   const handleLogout = () => {
     localStorage.removeItem("jwtToken");
     navigate("/login");
+    window.location.reload();
   };
 
+  const totalCommittedHours = Object.values(committedHours).reduce((sum, hours) => sum + hours, 0);
+
   return (
+
     <div className="containers">
-      <div className="logo-container">
+
+
+      <div className="logo-containers">
         <img src={logo} alt="Orange Business Logo" className="logo" />
+        <h1 className="naames">Allocate Hours</h1>
+        
+        <div className="backa" title="back" style={{ marginRight: '8px' }} onClick={() => navigate("/project-table")}>
+          {/* <img src={back} alt="Previous Page" className="back-icons" /> */}
+
+          <h3 className="previous">Previous Page</h3>
+        </div>
+        {/* <img src={logo} alt="Orange Business Logo" className="logo" /> */}
       </div>
 
-      <button onClick={handleLogout} className="logout-button">
+      <button onClick={handleLogout} title="Logout" className="logout-button">
         Logout
       </button>
 
+      <div className="home-icon-containersss" title="Go to Homepage" onClick={() => navigate("/landing")}>
+        {/* <img src={homeIcon} alt="Home" className="home-iconsss" /> */}
+        <h4 className="house">Home </h4>
+      </div>
+
       <div className="form-containers">
-        {/* Header Section */}
         <div className="header-section">
           <div className="project-info">
-            <h2 className="project-code">Prime Code: {primeCode}</h2>
+            <h2 className="project-code">PrimeCode: {primeCode}</h2>
             <div className="hours-info">
               <h3 className="total">Total Hours: {totalHours}</h3>
               <h3 className="rem">Remaining Hours: {calculateCurrentRemainingHours()}</h3>
-              <h3 className="comm">Total commiitted:{totalCommittedHours}</h3>
+              <h3 className="comm">Total committed: {totalCommittedHours}</h3>
             </div>
           </div>
         </div>
@@ -289,6 +348,7 @@ export default function ProjectDetails() {
         <div className="search-section">
           <input
             ref={searchInputRef}
+
             type="text"
             className="search"
             placeholder={delegateFor ? `Delegate to employee for ${delegateFor?.firstName || ''}...` : "Search employee..."}
@@ -296,7 +356,7 @@ export default function ProjectDetails() {
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setShowSearchResults(true)}
           />
-         
+
           {showSearchResults && searchResults.length > 0 && (
             <div className="search-results" ref={searchResultsRef}>
               <ul>
@@ -309,19 +369,6 @@ export default function ProjectDetails() {
               </ul>
             </div>
           )}
-
-          {selectedFte && !delegateFor && (
-            <div className="selected-employee">
-              <p>Selected: {selectedFte.firstName} {selectedFte.lastName}</p>
-              <button
-                className="action-button"
-                onClick={handleAddFTE}
-                disabled={calculateCurrentRemainingHours() <= 0}
-              >
-                Add FTE
-              </button>
-            </div>
-          )}
         </div>
 
         {/* FTE Table */}
@@ -331,68 +378,64 @@ export default function ProjectDetails() {
             <thead>
               <tr>
                 <th>FTE Name</th>
-                <th>Staff ID</th>
+                {/* <th>Staff ID</th> */}
                 <th>Allocated Hours</th>
-                <th>Committed Hours</th> {/* New column */}
+                <th>Committed Hours</th>
                 <th>Actions</th>
               </tr>
             </thead>
-<tbody>
-  {allocatedFTEs.map((fte) => (
-    <React.Fragment key={fte.staffId}>
-      <tr>
-        <td>{fte.firstName} {fte.lastName}</td>
-        <td>{fte.staffId}</td>
-        <td>
-          <input
-            type="number"
-            min="0"
-            value={fteHours[fte.staffId] ?? ""}
-            onChange={(e) => {
-              const value = e.target.value;
-              setFteHours((prev) => ({ ...prev, [fte.staffId]: value }));
-            }}
-          />
-        </td>
-        <td>{committedHours[fte.staffId] || 0}</td>
-        <td className="table-actions">
-          {newFTEs.some((n) => n.staffId === fte.staffId) ? (
-            <button onClick={() => handleSaveFTE(fte.staffId)}>Save</button>
-          ) : (
-            <>
-              <button onClick={() => handleUpdateFTE(fte.staffId)}>Update</button>
-              <button onClick={() => handleDeleteFTE(fte.staffId)}>Delete</button>
-              {/* <button onClick={() => handleDelegateClick(fte)}>Delegate</button>
-              <button onClick={() => handleSaveDelegates(fte.staffId)}>Save Delegates</button> */}
-            </>
-          )}
-        </td>
-      </tr>
-      {/* Render delegates directly below the assigner */}
-      {delegates[fte.staffId] && delegates[fte.staffId].map((delegate) => (
-        <tr key={delegate.staffId}>
-          <td colSpan={4} className="delegate-row">
-            {`${fte.firstName} ${fte.lastName} - ${delegate.staffName}`}
-            <input
-              type="number"
-              min="0"
-              placeholder="Delegate hours"
-              value={delegatedHours[fte.staffId]?.[delegate.staffId] || ""}
-              onChange={(e) => handleDelegateHoursChange(fte.staffId, delegate.staffId, e.target.value)}
-            />
-            {delegatedHours[fte.staffId]?.[delegate.staffId] && (
-              <span className="delegated-hours">
-                (Delegated: {delegatedHours[fte.staffId][delegate.staffId]} hours)
-              </span>
-            )}
-          </td>
-        </tr>
-      ))}
-    </React.Fragment>
-  ))}
-</tbody>
-
-
+            <tbody>
+              {allocatedFTEs.map((fte) => (
+                <React.Fragment key={fte.staffId}>
+                  <tr>
+                    <td>{fte.firstName} {fte.lastName}</td>
+                    {/* <td>{fte.staffId}</td> */}
+                    <td>
+                      <input
+                        type="number"
+                        min="0"
+                        value={fteHours[fte.staffId] ?? ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setFteHours((prev) => ({ ...prev, [fte.staffId]: value }));
+                        }}
+                      />
+                    </td>
+                    <td>{committedHours[fte.staffId] || 0}</td>
+                    <td className="table-actions">
+                      {newFTEs.some((n) => n.staffId === fte.staffId) ? (
+                        <button onClick={() => handleSaveFTE(fte.staffId)}>Save</button>
+                      ) : (
+                        <>
+                          <button onClick={() => handleUpdateFTE(fte.staffId)} style={{ marginRight: '8px' }}>Update</button>
+                          <button onClick={() => handleDeleteFTE(fte.staffId)}>Delete</button>
+                        </>
+                      )} 
+                    </td>
+                  </tr>
+                  {/* Render delegates directly below the assigner */}
+                  {delegates[fte.staffId] && delegates[fte.staffId].map((delegate) => (
+                    <tr key={delegate.staffId}>
+                      <td colSpan={4} className="delegate-row">
+                        {`${fte.firstName} ${fte.lastName} - ${delegate.staffName}`}
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="Delegate hours"
+                          value={delegatedHours[fte.staffId]?.[delegate.staffId] || ""}
+                          onChange={(e) => handleDelegateHoursChange(fte.staffId, delegate.staffId, e.target.value)}
+                        />
+                        {delegatedHours[fte.staffId]?.[delegate.staffId] && (
+                          <span className="delegated-hours">
+                            (Delegated: {delegatedHours[fte.staffId][delegate.staffId]} hours)
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </React.Fragment>
+              ))}
+            </tbody>
           </table>
         </div>
       </div>

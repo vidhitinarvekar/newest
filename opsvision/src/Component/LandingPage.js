@@ -1,37 +1,36 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "./LandingPage.css";
-import Picture11 from './Picture11.png';
-import { FaUserCircle } from "react-icons/fa";
+import Picture11 from "./Picture11.png";
+import { FaUserCircle, FaTasks } from "react-icons/fa";
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const [showProfileName, setShowProfileName] = useState(false);
   const [userName, setUserName] = useState("");
   const [userRole, setUserRole] = useState("");
-  const [isLoading, setIsLoading] = useState(true); // Loading state
+  const [isProjectOwner, setIsProjectOwner] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedModule, setSelectedModule] = useState("");
 
   useEffect(() => {
     const name = localStorage.getItem("name") || "John Doe";
     const role = localStorage.getItem("role") || "";
+    const isOwner = localStorage.getItem("isProjectOwner") === "true";
+
     setUserName(name);
     setUserRole(role);
-    setIsLoading(false); // Set loading to false after fetching user data
+    setIsProjectOwner(isOwner);
+    setIsLoading(false);
   }, []);
 
   useEffect(() => {
-    // Check if the user is authenticated and has a valid role
     if (!isLoading) {
       if (!userRole) {
-        navigate("/login"); // Redirect to login if no role is found
-      } else if (userRole === "VerticalLead" || userRole === "ProjectManager" || userRole === "Admin") {
-        // Redirect to project table if the user has the right role and is on the root path
-        if (window.location.pathname === "/") {
-          navigate("/project-table");
-        }
+        navigate("/login");
       }
     }
-  }, [isLoading, userRole, navigate]);
+  }, [isLoading, userRole, isProjectOwner, navigate]);
 
   const toggleProfile = () => {
     setShowProfileName(!showProfileName);
@@ -41,60 +40,109 @@ const LandingPage = () => {
     localStorage.clear();
     sessionStorage.removeItem("hasRefreshed");
     navigate("/login");
+    window.location.reload();
   };
 
-  const showPrimeManagement = userRole === "VerticalLead" || userRole === "ProjectManager" || userRole === "Admin";
-  const showEmployeeManagement = userRole === "Employee" || showPrimeManagement;
+  const showPrimeManagement =
+    userRole === "VerticalLead" ||
+    userRole === "ProjectOwner" ||
+    (userRole === "Manager" && isProjectOwner);
 
-  // Show loading state while fetching user data
+  const showEmployeeManagement =
+    userRole === "Employee" || userRole === "Manager" || showPrimeManagement;
+
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="loading">Loading...</div>;
   }
 
   return (
     <div className="landing-page">
-      {/* Top-right profile */}
-      <div className="top-right-profile">
-        <div className="profile-section" onClick={toggleProfile}>
-          <FaUserCircle size={30} className="profile-icon" />
-          {showProfileName && <span className="profile-name">{userName}</span>}
-        </div>
-      </div>
-
       <div className="sidebar">
-        <h2>Modules</h2>
-        <ul>
-          {showPrimeManagement && (
-            <div className="mod">
-              <li>
-                
-                <Link to="/project-table" target= "_blank" onClick={(e) => e.stopPropagation()}>Prime Management</Link>
-              </li>
-              <li>
-                <Link to="/dashboard" onClick={(e) => e.stopPropagation()}>My Dashboard</Link>
-              </li>
-            </div>
-          )}
+        <div>
+          <h2 className="sidebar-title">Modules</h2>
+          <ul className="nav-menu">
+            <li
+              className={`nav-item ${
+                selectedModule === "primeAllocation" ? "active" : ""
+              }`}
+              onClick={() => setSelectedModule("primeAllocation")}
+            >
+              <FaTasks /> <span>Prime</span>
+            </li>
+          </ul>
+        </div>
 
-          {showEmployeeManagement && !showPrimeManagement && (
-            <div className="mod">
-              <li>
-                <Link to="/dashboard" onClick={(e) => e.stopPropagation()}>Employee Management</Link>
-              </li>
-            </div>
-          )}
-        </ul>
-
-        <button className="logout-button" onClick={handleLogout}>
+        <button className="logout-button" title="Logout" onClick={handleLogout}>
           Logout
         </button>
       </div>
 
       <div className="main-content">
-        <h1>Welcome to the Landing Page</h1>
-        <p>Select a module from the sidebar to begin.</p>
+        <div className="top-right-profile" onClick={toggleProfile}>
+          <FaUserCircle size={24} className="profile-icon" />
+          {showProfileName && <span className="profile-name">{userName}</span>}
+        </div>
+
+        <h1 className="welcome-title">Welcome to the Landing Page</h1>
+        <p className="welcome-subtext">
+          Select a module from the sidebar to begin.
+        </p>
+
+        {selectedModule === "primeAllocation" && (
+  <div className="prime-options">
+    <h2>Prime Options</h2>
+
+    {/* For VerticalLead: Only show Prime Management */}
+    {userRole === "VerticalLead" && (
+      <button onClick={() => navigate("/project-table")}>
+        Prime Allocation
+      </button>
+    )}
+
+    {/* For Manager with isProjectOwner: Show both */}
+    {userRole === "Manager" && isProjectOwner && (
+      <>
+        <button onClick={() => navigate("/project-table")}>
+          Prime Allocation
+        </button>
+        <button onClick={() => navigate("/dashboard")}>Self-Assigned Tasks</button>
+        <button onClick={() => navigate("/manager")}>Prime Assignment</button>
+      </>
+    )}
+
+    {/* For Manager (non-project owner): Show My Prime and Prime Assignment */}
+    {userRole === "Manager" && !isProjectOwner && (
+      <>
+        <button onClick={() => navigate("/dashboard")}>Self-Assigned Tasks</button>
+        <button onClick={() => navigate("/manager")}>Prime Assignment</button>
+      </>
+    )}
+
+    {/* For ProjectOwner only (not Manager or VerticalLead) */}
+    {userRole === "ProjectOwner" && !isProjectOwner && (
+      <>
+        <button onClick={() => navigate("/project-table")}>
+          Prime Allocation
+        </button>
+        <button onClick={() => navigate("/dashboard")}>Self-Assigned Tasks</button>
+        <button onClick={() => navigate("/manager")}>Prime Assignment</button>
+      </>
+    )}
+
+    {/* For regular employees (not management) */}
+    {!showPrimeManagement && userRole === "Employee" && (
+      <button onClick={() => navigate("/manager")}>My Prime</button>
+    )}
+  </div>
+)}
+
         <div className="images">
-          <img src={Picture11} alt="Description" className="state" />
+          <img
+            src={Picture11}
+            alt="Visual"
+            style={{ maxWidth: "400px", height: "auto" }}
+            className="landing-image"
+          />
         </div>
       </div>
     </div>
@@ -102,4 +150,3 @@ const LandingPage = () => {
 };
 
 export default LandingPage;
-

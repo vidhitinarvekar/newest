@@ -1,6 +1,7 @@
 import axios from "axios";
 
 const API_BASE_URL = "https://localhost:443/api";
+const ownerId = localStorage.getItem("staffId");
 
 // Global axios config with auth and headers
 axios.interceptors.request.use(
@@ -40,6 +41,26 @@ export const allocateProjectFte = async ({ projectId, primeCode, allocatedFte })
     throw error;
   }
 };
+
+export const getProjectsByOwnerId = async (staffId) => {
+  const token = localStorage.getItem("token"); // Adjust key name if different
+  const response = await fetch(`https://localhost/api/ProjectFte/by-owner/${staffId}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    }
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`Fetch failed: ${response.status} - ${errorText}`);
+    throw new Error("Failed to fetch projects by owner");
+  }
+
+  return await response.json();
+};
+
 
 
 // Delete FTE allocation from a project

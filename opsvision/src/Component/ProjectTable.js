@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaEdit, FaCheck } from "react-icons/fa";
 import "./ProjectTable.css";
 import logo from "./images.png";
-
+import homeIcon from "./home.png"; // <-- Import your home icon here
 import {
   getProjects,
   updateProjectFte,
@@ -11,11 +11,14 @@ import {
 } from "../Services/api";
 
 const ProjectTable = () => {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [fteAllocations, setFteAllocations] = useState({});
   const [fteReadonly, setFteReadonly] = useState({});
   const [allocatedHours, setAllocatedHours] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -40,7 +43,6 @@ const ProjectTable = () => {
         console.error("Error fetching projects:", error);
       }
     };
-
     fetchProjects();
   }, []);
 
@@ -65,11 +67,10 @@ const ProjectTable = () => {
       const payload = {
         projectId,
         allocatedFte: fteValue,
-        primeCode: project.primeCode, // Still required for backend if needed
+        primeCode: project.primeCode,
       };
 
       let response;
-
       if (!project.allocatedFte || project.allocatedFte === 0) {
         response = await allocateProjectFte(payload);
       } else {
@@ -78,14 +79,7 @@ const ProjectTable = () => {
 
       const hours =
         response?.allocatedHours ?? response?.data?.allocatedHours ?? 0;
-
-      alert(`FTE saved: ${hours} hours calculated.`);
-
-      setAllocatedHours((prev) => ({
-        ...prev,
-        [projectId]: hours,
-      }));
-
+      setAllocatedHours((prev) => ({ ...prev, [projectId]: hours }));
       setFteReadonly((prev) => ({ ...prev, [projectId]: true }));
 
       setProjects((prev) =>
@@ -101,7 +95,6 @@ const ProjectTable = () => {
       );
     } catch (error) {
       console.error("FTE save/update failed:", error);
-      alert("FTE save/update failed. Check console for details.");
     }
   };
 
@@ -113,11 +106,110 @@ const ProjectTable = () => {
     );
   });
 
+  const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredProjects.slice(indexOfFirstItem, indexOfLastItem);
+
+  const renderPagination = () => {
+    const pages = [];
+    const visibleRange = 1;
+    const totalNumbers = visibleRange * 2 + 1;
+
+    if (totalPages <= totalNumbers + 2) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(
+          <button
+            key={i}
+            className="pagination-button"
+            disabled={i === currentPage}
+            onClick={() => setCurrentPage(i)}
+          >
+            {i}
+          </button>
+        );
+      }
+    } else {
+      pages.push(
+        <button
+          key={1}
+          className="pagination-button"
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage(1)}
+        >
+          1
+        </button>
+      );
+
+      if (currentPage > visibleRange + 2) {
+        pages.push(<span key="start-ellipsis">...</span>);
+      }
+
+      const start = Math.max(2, currentPage - visibleRange);
+      const end = Math.min(totalPages - 1, currentPage + visibleRange);
+
+      for (let i = start; i <= end; i++) {
+        pages.push(
+          <button
+            key={i}
+            className="pagination-button"
+            disabled={i === currentPage}
+            onClick={() => setCurrentPage(i)}
+          >
+            {i}
+          </button>
+        );
+      }
+
+      if (currentPage < totalPages - visibleRange - 1) {
+        pages.push(<span key="end-ellipsis">...</span>);
+      }
+
+      pages.push(
+        <button
+          key={totalPages}
+          className="pagination-button"
+          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage(totalPages)}
+        >
+          {totalPages}
+        </button>
+      );
+    }
+
+    return (
+      <div className="pagination-container">
+        <button
+          className="pagination-button"
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+        >
+          &lt;
+        </button>
+        {pages}
+        <button
+          className="pagination-button"
+          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+        >
+          &gt;
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div className="container">
+      {/* Home Icon */}
+      <div className="homes-icon-containers" onClick={() => navigate("/landing")}>
+      <h className="hhm">Home</h>
+  {/* <img src={homeIcon} alt="Home" className="home-icons" /> */}
+</div>
+
       <div className="logo-container">
         <img src={logo} alt="Logo" className="logo" />
       </div>
+
       <h1 className="text-center">Project Management System</h1>
 
       <div className="search-container">
@@ -134,8 +226,7 @@ const ProjectTable = () => {
         <table className="table table-bordered table-striped">
           <thead className="thead-light">
             <tr>
-              <th>Project Code</th>
-              <th>Project Name</th>
+              <th>PrimeCode</th>
               <th>Expiration Date</th>
               <th>FTE Allocated</th>
               <th>Total Hours</th>
@@ -143,8 +234,8 @@ const ProjectTable = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredProjects.length > 0 ? (
-              filteredProjects.map((project) => {
+            {currentItems.length > 0 ? (
+              currentItems.map((project) => {
                 const currentFte = fteAllocations[project.projectId] ?? 0;
                 const isNewFte =
                   project.allocatedFte === 0 || project.allocatedFte == null;
@@ -163,7 +254,6 @@ const ProjectTable = () => {
                         {project.primeCode}
                       </Link>
                     </td>
-                    <td>{project.projectName || "--"}</td>
                     <td>
                       {project.expiryDate
                         ? new Date(project.expiryDate).toLocaleDateString()
@@ -187,7 +277,11 @@ const ProjectTable = () => {
                           className="edit-btn"
                           onClick={() => handleUpdateFte(project.projectId)}
                         >
-                          {isNewFte ? "Assign" : <><FaEdit /> Update</>}
+                          {isNewFte ? "Assign" : (
+                            <>
+                              <FaEdit /> Update
+                            </>
+                          )}
                         </button>
                       ) : (
                         <button
@@ -209,6 +303,8 @@ const ProjectTable = () => {
           </tbody>
         </table>
       </div>
+
+      {renderPagination()}
     </div>
   );
 };

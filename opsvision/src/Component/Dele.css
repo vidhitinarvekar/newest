@@ -1,0 +1,36 @@
+.delegate-container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .logo {
+    height: 50px;
+  }
+  
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    color: darkorange;
+  }
+  
+  .project-info {
+    margin-top: 20px;
+    color: darkorange;
+  }
+  
+  .fte-list {
+    margin-top: 30px;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    color: white;
+  }
+  
+  th, td {
+    padding: 10px;
+    border: 1px solid #ccc;
+  }
+  

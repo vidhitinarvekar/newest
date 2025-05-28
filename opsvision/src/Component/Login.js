@@ -26,28 +26,26 @@ const Login = ({ setIsAuthenticated = () => {} }) => {
         return;
       }
 
-      const { token, role, name, email: userEmail, staffId } = response;
+      const { token, role, name, email: userEmail, staffId ,  isProjectOwner} = response;
 
       if (!role) {
         setError("Role information is missing. Please contact admin.");
         return;
       }
 
-      // ✅ Store values BEFORE navigating
+      // Store values before navigating
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
       localStorage.setItem("name", name || "");
       localStorage.setItem("email", userEmail);
       localStorage.setItem("staffId", staffId || "");
+      localStorage.setItem("isProjectOwner", isProjectOwner ? "true" : "false");
 
       setIsAuthenticated(true);
 
-      // ✅ Redirect based on role
-      if (role === "Employee") {
-        navigate("/project-tracking-dashboard");
-      } else {
-        navigate("/project-table");
-      }
+      // Navigate to landing page
+      navigate("/landing", { replace: true });
+
     } catch (err) {
       setError(err.message || "Login failed. Please try again.");
     }

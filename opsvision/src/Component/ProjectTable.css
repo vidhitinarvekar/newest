@@ -1,17 +1,31 @@
 /* General styling */
+
 body {
-  font-family: 'Poppins', sans-serif;
+
+  font-family: Arial, Helvetica, sans-serif;
+
   background-color: #F3EFED !important;  /* Light background tone */
+
   color: #585858;  /* Dark Grey text for readability */
+
   margin: 0;
+
   padding: 0;
+
 }
 
+ 
+
 .logo{
+
   height: 50px;
+
   width: 50px;
+
 }
+
 /* Table Wrapper */
+
 .table-wrapper {
   margin: 0 auto;
   width: 90%;
@@ -19,370 +33,755 @@ body {
   border: 1px solid #ddd;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   background-color: #fff;
-  max-height: 550px; /* Set max height to enable scrolling */
-  overflow-y: auto;   /* Enables vertical scrollbar */
+  max-height: 700px;
 }
 
 .save-btn {
+
   background-color: #ff7900;
+
   color: white;
+
   border: none;
+
   padding: 6px 10px;
+
   border-radius: 4px;
+
   cursor: pointer;
+
 }
 
+ 
+
+ 
 
 /* Sticky Table Header */
+
 .table thead th {
+
   position: sticky;
+
   top: 0;
+
   background-color: #02080b;
+
   color: rgb(239, 239, 240);
+
   z-index: 1;
+ 
+
 }
+
+ 
 
 /* Table Styles */
+
 .table {
+
   width: 100%;
-  margin-top: 20px;
+
+  margin-top: 0px;
+
   border-collapse: collapse;
+
   background-color: #FFFFFF;
+
 }
+
 .search-container {
+
 display: flex;
+
 justify-content: center;
+
 align-items: center;
+
 margin-top: -60px;
+
 margin-bottom: 20px;
-margin-left: 1000px;
+
+margin-left: 700px;
+
 }
+
+ 
 
 .search-bar {
+
 width: 100%;
-max-width: 280px; /* Adjust this value as needed */
+
+max-width: 320px; /* Adjust this value as needed */
+
 padding: 10px;
+
 font-size: 16px;
+
 border: 1px solid #ccc;
+
 border-radius: 5px;
+
 outline: none;
+
 transition: border-color 0.3s ease;
+
 }
+
+ 
 
 .search-bar:focus {
+
 border-color: #4CAF50; /* Change to the desired color on focus */
+
 box-shadow: 0 0 8px rgba(76, 175, 80, 0.3); /* Optional glow effect */
+
 }
+
+ 
 
 .search-bar::placeholder {
+
 color: #888; /* Placeholder text color */
+
 font-style: italic;
+
 }
+
+ 
 
 .search-container .search-bar {
+
 margin-right: 10
+
 }
 
+ 
+
+ 
 
 /* Title section */
+
 .container h1 {
 
+ 
+
 background-color:#FF7900 ;
+
   color: #FFFFFF;  /* White text for contrast */
+
   padding: 12px;
+
   text-align: center;
+
   border-radius: 10px;
+
   box-shadow: 0 4px 10px rgba(255, 121, 0, 0.3);
-  font-size: 26px;
+
+  font-size: 22px;
+
   letter-spacing: 1px;
+
   text-transform: uppercase;
+
   transition: transform 0.3s ease;
-  margin-top: 30px;
+
+  margin-top: 10px;
+
   width: 900px;
-  margin-left: 120px;
+
+  margin-left: 50px;
+
 }
+
+ 
 
 .container h1:hover {
+
   transform: scale(1.02);
+
 }
+
+ 
 
 /* Flex container to hold Project Management Box and GIF side by side */
+
 .project-container {
+
   display: flex;
+
   align-items: flex-start;
+
   justify-content: center;
+
   gap: 20px;  /* Space between the box and the gif */
+
   margin-top: 20px;
+
 }
+
+ 
 
 .project-link{
+
   color: #FF7900 !important;
+
 }
+
+ 
 
 /* Project Management Box */
+
 .project-box {
+
   background-color: #FFFFFF;
+
   box-shadow: 0 4px 15px rgba(255, 121, 0, 0.2);
+
   border-radius: 8px;
+
   padding: 15px;
+
   width: 70%;  /* Adjust width to make the box a bit smaller */
+
   max-width: 600px;  /* Adjust max-width for compactness */
+
   transition: all 0.3s ease;
+
 }
+
+ 
 
 .project-box:hover {
+
   box-shadow: 0 6px 20px rgba(255, 121, 0, 0.4);
+
 }
+
+ 
 
 /* Project Management Header */
+
 .project-box h2 {
+
   color: #FF7900;  /* Dark Blue for titles */
+
   font-size: 22px;
+
   font-weight: bold;
+
   margin-bottom: 15px;
+
 }
+
+ 
 
 /* Table headers */
+
 .table th, .table td {
+
   padding: 12px;
+
   font-size: 14px;
+
   text-align: center;
+
   border-bottom: 1px solid #ccc;
+
 }
+
+ 
 
 /* Project Titles */
+
 .table td:nth-child(1) {
+
   color: #FF7900; /* Using the same orange for project codes */
+
   font-weight: bold;
+
 }
 
-/* Pagination Styles */
+ 
+
 .pagination-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 20px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  gap: 6px;
 }
 
 .pagination-button {
+  padding: 6px 12px;
   background-color: #FF7900;
-  color: white;
   border: none;
-  padding: 8px 16px;
-  margin: 0 5px;
-  font-size: 14px;
-  cursor: pointer;
+  color: white;
+  font-weight: bold;
   border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
 }
 
-.pagination-button:hover {
-  background-color: #FF4500;
+.pagination-button:hover:not(:disabled) {
+  background-color: #FF7900;
 }
 
 .pagination-button:disabled {
-  background-color: #ddd;
+  background-color: #cccccc;
   cursor: not-allowed;
+}
+
+.pagination-container span {
+  font-weight: bold;
+  color: #FF7900;
+  font-size: 18px;
 }
 
 /* Table body */
+
 .table td {
+
   padding: 12px;
+
   font-size: 14px;
+
   text-align: center;
+
   color: #585858;
+
   border-bottom: 1px solid #444;
+
   transition: background-color 0.3s ease;
+
 }
+
+ 
 
 /* Keep Specific Columns White */
+
 .table td:nth-child(1),  /* Project Code */
+
 .table td:nth-child(2),  /* Expiration Date */
+
 .table td:nth-child(3),  /* Allocated FTE */
+
 .table td:nth-child(4) { /* Allocated Hours */
+
   background-color: #FFFFFF;
+
   color: #000000;
+
   font-weight: bold;
+
 }
+
+ 
 
 /* Alternate row colors */
+
 .table tbody tr:nth-child(even) {
+
   background-color:#FFFFFF;
+
 }
+
+ 
 
 .table tbody tr:hover {
+
   background-color: rgba(248, 247, 246, 0.954);
+
   transition: background-color 0.3s ease-in-out;
+
 }
+
+ 
 
 /* Input field for FTE */
+
 .table input[type="number"] {
+
   width: 100%;
+
   padding: 10px;
+
   font-size: 14px;
+
   text-align: center;
+
   border: 2px solid #FF7900;
+
   border-radius: 8px;
+
   background-color: #E7E0E0;
+
   color: #050505;
+
   transition: all 0.3s ease-in-out;
+
   width: 80px;
+
   height: 35px;
+
   margin-left: 70px;
+
 }
+
+ 
 
 .a {
+
   color: #ff7900;
+
   text-decoration: none;
+
   background-color: transparent;
+
 }
+
+ 
 
 .table input[type="number"]:focus {
+
   background-color: #D5CECE;
-  border-color: #FF4500;
+
+  border-color: #FF7900;
+
   outline: none;
+
   box-shadow: 0 0 10px rgba(255, 102, 0, 0.5);
+
 }
+
+ 
 
 /* Action icons */
+
 .icon {
+
   cursor: pointer;
+
   color: #FF7900;
+
   font-size: 22px;
+
   transition: transform 0.2s ease, color 0.3s ease;
+
 }
+
+ 
 
 .icon:hover {
-  color: #FF4500;
+
+  color: #FF7900;
+
   transform: scale(1.2);
+
 }
+
+ 
 
 .project-container {
+
   text-align: center;
+
   padding: 20px;
+
 }
+
+ 
 
 /* Flex container to align table (left) and GIF (right) */
+
 .content-container {
+
   display: flex;
+
   justify-content: space-between; /* Table stays left, GIF moves to right */
+
   align-items: center;
+
   margin-top: 20px;
+
 }
+
+ 
 
 /* Table stays on the left */
+
 .table-container {
+
   flex: 2;  /* Takes more space */
+
   text-align: left;
+
 }
+
+ 
 
 /* GIF moves to the right */
+
 .gif-container {
+
   flex: 1;  /* Takes less space */
+
   display: flex;
+
   justify-content: flex-end;  /* Aligns GIF to the right */
+
   align-items: center;
+
 }
+
+ 
 
 /* Adjust GIF size */
+
 .project-gif {
+
   max-width: 250px;  /* Resize as needed */
+
   height: auto;
+
 }
 
+ 
+
+ 
 
 /* Buttons */
+
 .btn {
-  background: linear-gradient(135deg, #FF7900, #FFBA00);
+
+  background: #ff7900;
+
   color: #FFFFFF;
+
   border: none;
+
   padding: 10px 18px;
+
   font-size: 14px;
+
   font-weight: bold;
+
   border-radius: 8px;
+
   cursor: pointer;
+
   transition: all 0.3s ease-in-out;
-  box-shadow: 0 4px 10px rgba(255, 121, 0, 0.2);
+
+  box-shadow:#ff7900;
+
 }
+
+ 
 
 .btn:hover {
-  background: linear-gradient(135deg, #FF4500, #B33900);
+
+  background: #ff7900;
+
   transform: scale(1.05);
-  box-shadow: 0 5px 15px rgba(255, 102, 0, 0.4);
+
+  box-shadow: #ff7900;
+
 }
+
+ 
 
 /* Disabled buttons */
+
 button:disabled, .form-control:disabled {
+
   background-color: #EEE6E6;
+
   color: #9d9797;
+
   cursor: not-allowed;
+
   border: none;
+
 }
+
+ 
 
 /* Add styles to position the image */
+
 .image-container {
+
   display: flex;
+
   justify-content: flex-end;
+
   margin-top: 20px;
+
 }
+
+ 
 
 .illus-image {
+
   max-width: 300px; /* Adjust size as needed */
+
   height: auto;
+
 }
+
+ 
 
 .link-container {
+
   margin-top: 20px;
+
   text-align: center;
+
 }
+
+ 
 
 .link-container .btn {
+
   padding: 10px 20px;
-  background-color: #007bff;
+
+  background-color: #ff7900;
+
   color: white;
+
   text-decoration: none;
+
   border-radius: 5px;
+
 }
+
+ 
 
 .link-container .btn:hover {
-  background-color: #0056b3;
+
+  background-color: #ff7900;
+
 }
 
+ 
 
+ 
+
+ 
 
 /* Responsive table */
+
 @media (max-width: 768px) {
+
   .table {
+
       font-size: 12px;
+
   }
+
+ 
 
   .table th, .table td {
+
       padding: 10px;
+
       font-size: 12px;
+
   }
+
+ 
 
   .container h1 {
+
       font-size: 20px;
+
       padding: 15px;
+
   }
+
+ 
 
   .btn {
+
       font-size: 12px;
+
       padding: 8px 12px;
+
   }
+
+ 
 
   .icon {
+
       font-size: 18px;
+
   }
+
+ 
 
   .project-box {
+
       width: 95%;  /* More compact layout on smaller screens */
+
   }
+
+ 
 
   .project-box h2 {
+
       font-size: 18px;
+
   }
 
+ 
+
   .project-container {
+
       flex-direction: column;  /* Stack vertically on smaller screens */
+
   }
+
+}
+
+/* Home icon in top-right corner */
+.homes-icon-containers {
+  width: 100px;
+  height: 33px;
+  background-color: #ff7900;
+  color: white;
+  border: 1px solid black;
+  cursor: pointer;
+  margin-right: 180px;
+  border-radius: 8px;
+  position: absolute;
+  margin-top: 1px;
+  align-items: center;
+  padding-top: 7px;
+  margin-left:1250px;
+  margin-top:15px;
+
+}
+
+.hhm{
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 550;
+  font-size: 15px;
+  margin-left: 25px;
+  margin-top: 10px !important;
+  margin-bottom: -20px;
+}
+.home-icons {
+  width: 40px;
+  height: 40px;
+  transition: transform 0.2s ease-in-out;
+}
+
+.home-icons:hover {
+  transform: scale(1.1);
+}
+
+/* Adjust heading width and shift left slightly */
+.container h1 {
+  width: 650px;             /* Slightly smaller than before */
+  margin-left: 90px;        /* Shift left to give room for home icon */
+  margin-right: auto;
 }
