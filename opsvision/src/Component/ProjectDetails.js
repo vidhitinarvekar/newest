@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -37,7 +35,7 @@ export default function ProjectDetails() {
 
     try {
       // Fetching project-specific data (assigned FTEs)
-      const response = await axios.get(`https://localhost:443/api/ProjectFteEmployee/${projectId}`);
+      const response = await axios.get(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/${projectId}`);
       const { assignedEmployees, remainingHours, projectName, primeCode } = response.data;
 
       setAllocatedFTEs(assignedEmployees || []);
@@ -61,7 +59,7 @@ export default function ProjectDetails() {
       await fetchAllCommittedHours(assignedEmployees);
 
       // Now, let's fetch the total allocated hours for the specific project
-      const allProjectsResponse = await axios.get("https://localhost/api/ProjectFte/all");
+      const allProjectsResponse = await axios.get("https://opsvisionbe.integrator-orange.com/api/ProjectFte/all");
       const projectData = allProjectsResponse.data.find(
         (project) => project.projectId === parseInt(projectId)
       );
@@ -76,7 +74,7 @@ export default function ProjectDetails() {
 
   const fetchCommittedHours = async (staffId, projectId) => {
     try {
-      const response = await axios.get(`https://localhost/api/ProjectFteManagement/project/${projectId}/committed-hours`, {
+      const response = await axios.get(`https://opsvisionbe.integrator-orange.com/api/ProjectFteManagement/project/${projectId}/committed-hours`, {
         params: { projectId, managerStaffId: staffId }
       });
       return response.data.managerTeamTotal || 0;
@@ -108,7 +106,7 @@ export default function ProjectDetails() {
         return;
       }
       try {
-        const response = await axios.get(`https://localhost/api/ProjectFteEmployee/searchs`, {
+        const response = await axios.get(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/searchs`, {
           params: { searchTerm: searchQuery },
         });
         setSearchResults(response.data);
@@ -219,7 +217,7 @@ export default function ProjectDetails() {
 
       console.log("📤 Sending payload to API:", payload);
 
-      const response = await axios.post("https://localhost/api/ProjectFteEmployee/allocate", payload);
+      const response = await axios.post("https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/allocate", payload);
       console.log("✅ Save response:", response);
 
       // Clean up after successful save
@@ -264,7 +262,7 @@ export default function ProjectDetails() {
         delegatees: delegateeList,
       };
 
-      await axios.put("https://localhost/api/ProjectFteEmployee/update", payload);
+      await axios.put("https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/update", payload);
       fetchAssignedFTEs();
     } catch (error) {
       console.error("Error updating FTE:", error);

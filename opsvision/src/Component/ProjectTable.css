@@ -11,7 +11,8 @@ body {
   margin: 0;
 
   padding: 0;
-
+ /* overflow-y: auto;
+ overflow-x: auto; */
 }
 
  
@@ -27,15 +28,24 @@ body {
 /* Table Wrapper */
 
 .table-wrapper {
-  margin: 0 auto;
-  width: 90%;
+  overflow-x: auto; /* horizontal scroll if needed */
+  overflow-y: auto; /* vertical scroll if content exceeds max-height */
+  max-height: 520px; /* adjust as needed for zoom behavior */
   border-radius: 10px;
   border: 1px solid #ddd;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   background-color: #fff;
-  max-height: 700px;
+  margin-bottom: 10px; /* space between table and pagination */
 }
 
+.table-section {
+  display: flex;
+  flex-direction: column;
+  width: 120%;
+  max-width: 1300px; /* or your preferred max width */
+  margin: 0 auto;
+  padding: 10px;
+}
 .save-btn {
 
   background-color: #ff7900;
@@ -58,35 +68,23 @@ body {
 
 /* Sticky Table Header */
 
-.table thead th {
-
-  position: sticky;
-
-  top: 0;
-
+.table thead {
   background-color: #02080b;
-
   color: rgb(239, 239, 240);
-
+  position: sticky;
+  top: 0;
   z-index: 1;
- 
-
 }
+
 
  
 
 /* Table Styles */
 
 .table {
-
   width: 100%;
-
-  margin-top: 0px;
-
   border-collapse: collapse;
-
-  background-color: #FFFFFF;
-
+  min-width: 600px; /* ensures table doesn't shrink too much */
 }
 
 .search-container {
@@ -97,11 +95,12 @@ justify-content: center;
 
 align-items: center;
 
-margin-top: -60px;
+margin-top: -80px;
 
-margin-bottom: 20px;
+margin-bottom: 80px;
 
 margin-left: 700px;
+position: sticky;
 
 }
 
@@ -279,13 +278,11 @@ background-color:#FF7900 ;
 
 .table th, .table td {
 
-  padding: 12px;
-
+  padding: 8px;
   font-size: 14px;
-
   text-align: center;
-
-  border-bottom: 1px solid #ccc;
+  border-bottom: 0.3px solid #ccc;
+  
 
 }
 
@@ -302,19 +299,21 @@ background-color:#FF7900 ;
 }
 
  
-
 .pagination-container {
   display: flex;
-  justify-content: center;
-  align-items: center;
   flex-wrap: wrap;
-  margin-top: 10px;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 0;
+  width: 100%;
 }
 
+/* Pagination buttons */
 .pagination-button {
+  min-width: 40px;
   padding: 6px 12px;
-  background-color: #FF7900;
+  font-size: 14px;
+  background-color: #ff7900;
   border: none;
   color: white;
   font-weight: bold;
@@ -324,18 +323,12 @@ background-color:#FF7900 ;
 }
 
 .pagination-button:hover:not(:disabled) {
-  background-color: #FF7900;
+  background-color: #e66b00;
 }
 
 .pagination-button:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
-}
-
-.pagination-container span {
-  font-weight: bold;
-  color: #FF7900;
-  font-size: 18px;
 }
 
 /* Table body */
@@ -742,6 +735,115 @@ button:disabled, .form-control:disabled {
 
 }
 
+
+
+
+/* Main header container */
+.custom-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 10px 20px;
+  background-color: transparent; /* or your preferred background */
+}
+
+/* Logo styles */
+.custom-logo-container {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.custom-logo {
+  height: 50px;
+  width: 50px;
+}
+
+/* Title styles */
+.custom-title {
+  flex: 2;
+  text-align: center;
+  font-size: 22px;
+  font-weight: bold;
+  color: #fff;
+  background-color: #ff7900;
+  padding: 12px;
+  border-radius: 10px;
+  margin: 0 10px;
+  flex-shrink: 1;
+}
+
+/* Search container styles */
+.custom-search-container {
+  flex: 2;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  min-width: 200px;
+}
+
+.custom-search-bar {
+  width: 100%;
+  max-width: 320px;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+/* Home button styles */
+.custom-home-btn {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 5px 10px;
+  background-color: #ff7900;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  margin-left: 10px;
+  width: 70px;
+  height: 33px;
+  background-color: #ff7900;
+  color: white;
+  border: 1px solid black;
+  cursor: pointer;
+  
+  border-radius: 8px;
+}
+
+.custom-home-text {
+  margin-left: 10px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 550;
+  font-size: 15px;
+  text-align: center;
+}
+
+/* Responsive adjustments */
+@media(max-width: 768px) {
+  .custom-header {
+    flex-direction: column;
+    align-items: center;
+  }
+  .custom-search-container {
+    justify-content: center;
+    margin-top: 10px;
+  }
+  .custom-title {
+    margin-top: 10px;
+  }
+  .custom-home-btn {
+    margin-top: 10px;
+  }
+}
+
 /* Home icon in top-right corner */
 .homes-icon-containers {
   width: 100px;
@@ -752,12 +854,13 @@ button:disabled, .form-control:disabled {
   cursor: pointer;
   margin-right: 180px;
   border-radius: 8px;
-  position: absolute;
+ 
   margin-top: 1px;
   align-items: center;
   padding-top: 7px;
   margin-left:1250px;
   margin-top:15px;
+  position: sticky;
 
 }
 

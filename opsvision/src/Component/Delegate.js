@@ -49,7 +49,7 @@ export default function Delegate() {
         return;
       }
       try {
-        const response = await axios.get(`https://localhost:443/api/ProjectFteEmployee/search`, {
+        const response = await axios.get(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/search`, {
           params: { searchTerm: searchQuery },
         });
         setSearchResults(response.data);
@@ -78,7 +78,7 @@ export default function Delegate() {
 
   const fetchRemainingHrs = async (id) => {
     try {
-      const response = await axios.get(`https://localhost/api/ProjectManagement/user-projects/${id}`);
+      const response = await axios.get(`https://opsvisionbe.integrator-orange.com/api/ProjectManagement/user-projects/${id}`);
       if (response.data && response.data.remainingHrs !== undefined) {
         setRemainingHours(response.data.remainingHrs);
       } else {
@@ -98,7 +98,7 @@ export default function Delegate() {
 
   const fetchProjectFTEs = async (id) => {
     try {
-      const response = await axios.get(`https://localhost/api/ProjectFteEmployee/manager-assignments/${id}`);
+      const response = await axios.get(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/manager-assignments/${id}`);
       const employees = response.data;
   
       setAssignedEmployees(employees || []);
@@ -139,7 +139,7 @@ export default function Delegate() {
   
   const fetchCommittedHours = async (staffId) => {
     try {
-      const response = await axios.get(`https://localhost/api/ProjectManagement/get-committed-hours`, {
+      const response = await axios.get(`https://opsvisionbe.integrator-orange.com/api/ProjectManagement/get-committed-hours`, {
         params: { projectId, staffId }
       });
       return response.data.committedHours || 0;
@@ -151,6 +151,16 @@ export default function Delegate() {
   
 
   const handleSelectEmployee = (employee) => {
+    const alreadyAssigned = assignedEmployees.some(emp => emp.staffId === employee.staffId);
+
+  const alreadySelected = newEmployees.some(emp => emp.staffId === employee.staffId);
+ 
+  if (alreadyAssigned || alreadySelected) {
+
+    alert("This employee is already assigned or selected.");
+
+    return;
+  }
   setNewEmployees((prev) => [...prev, employee]);
 
   setSearchQuery("");
@@ -184,7 +194,7 @@ export default function Delegate() {
         delegatees: []
       };
   
-      await axios.post(`https://localhost/api/ProjectFteEmployee/allocate`, payload);
+      await axios.post(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/allocate`, payload);
       fetchProjectFTEs(projectId);
     } catch (error) {
       console.error("Error allocating hours:", error);
@@ -218,7 +228,7 @@ export default function Delegate() {
         delegatees: []
       };
   
-      await axios.put(`https://localhost/api/ProjectFteEmployee/update`, payload);
+      await axios.put(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/update`, payload);
       fetchProjectFTEs(projectId);
     } catch (error) {
       console.error("Error updating hours:", error);
@@ -229,7 +239,7 @@ export default function Delegate() {
   
   const handleDeleteFte = async (staffIdToDelete) => {
     try {
-      await axios.delete(`https://localhost/api/ProjectFteEmployee/delete/${projectId}/${staffIdToDelete}`);
+      await axios.delete(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/delete/${projectId}/${staffIdToDelete}`);
       fetchProjectFTEs(projectId);
     } catch (error) {
       console.error("Error deleting FTE:", error);

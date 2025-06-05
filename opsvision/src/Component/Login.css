@@ -78,7 +78,7 @@ body {
 
     margin-bottom: 20px;
 
-    color: #FFA500;
+    color: #FF7900;
 
     font-size: 24px;
 
@@ -102,7 +102,7 @@ body {
 
 .login-form input:focus {
     background-color: #fff;
-    border-color: #ffa500;
+    border-color: #ff7900;
     outline: none;
 }
 
@@ -115,7 +115,7 @@ body {
 
     padding: 10px; /* Adjust padding if needed */
 
-    background-color: #FFA500;
+    background-color: #FF7900;
 
     border: none;
 
@@ -135,7 +135,7 @@ body {
 
 .login-form button:hover {
 
-    background-color: #ff8c00;
+    background-color: #ff7900;
 
     transform: translateY(-2px);
 

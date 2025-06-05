@@ -95,7 +95,7 @@ const LandingPage = () => {
     {/* For VerticalLead: Only show Prime Management */}
     {userRole === "VerticalLead" && (
       <button onClick={() => navigate("/project-table")}>
-        Prime Allocation
+        FTE Allocation
       </button>
     )}
 
@@ -103,18 +103,18 @@ const LandingPage = () => {
     {userRole === "Manager" && isProjectOwner && (
       <>
         <button onClick={() => navigate("/project-table")}>
-          Prime Allocation
+          FTE Allocation
         </button>
-        <button onClick={() => navigate("/dashboard")}>Self-Assigned Tasks</button>
-        <button onClick={() => navigate("/manager")}>Prime Assignment</button>
+        <button onClick={() => navigate("/dashboard")}>MyClocking</button>
+        <button onClick={() => navigate("/manager")}>My Team Clocking</button>
       </>
     )}
 
     {/* For Manager (non-project owner): Show My Prime and Prime Assignment */}
     {userRole === "Manager" && !isProjectOwner && (
       <>
-        <button onClick={() => navigate("/dashboard")}>Self-Assigned Tasks</button>
-        <button onClick={() => navigate("/manager")}>Prime Assignment</button>
+        <button onClick={() => navigate("/dashboard")}>MyClocking</button>
+        <button onClick={() => navigate("/manager")}>My Team Clocking</button>
       </>
     )}
 
@@ -122,16 +122,16 @@ const LandingPage = () => {
     {userRole === "ProjectOwner" && !isProjectOwner && (
       <>
         <button onClick={() => navigate("/project-table")}>
-          Prime Allocation
+          FTE Allocation
         </button>
-        <button onClick={() => navigate("/dashboard")}>Self-Assigned Tasks</button>
-        <button onClick={() => navigate("/manager")}>Prime Assignment</button>
+        <button onClick={() => navigate("/dashboard")}>MyClocking</button>
+        <button onClick={() => navigate("/manager")}>My Team Clocking</button>
       </>
     )}
 
     {/* For regular employees (not management) */}
     {!showPrimeManagement && userRole === "Employee" && (
-      <button onClick={() => navigate("/manager")}>My Prime</button>
+      <button onClick={() => navigate("/manager")}>MyClocking</button>
     )}
   </div>
 )}

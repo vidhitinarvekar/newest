@@ -7,7 +7,6 @@ import secureAxios from './utils/secureAxios';
 import withNavigation from './withNavigation'; // Import the withNavigation HOC
 import homeIcon from "./home.png";
 
-
 class Manager extends Component {
     constructor(props) {
         super(props);
@@ -31,59 +30,58 @@ class Manager extends Component {
         try {
             const response = await secureAxios.get("/api/ProjectFteManagement/my-assigned-projects/exclude-self");
             const projectsData = response.data;
-    
+
             const staffId = localStorage.getItem('staffId');
             if (!staffId) {
                 alert("Staff ID not found. Please log in again.");
                 return;
             }
-    
+
             const projectsWithHours = await Promise.all(
                 projectsData.map(async proj => {
-                  let lastCommittedHours = 0;
-                  let totalCommittedHours = 0;
-              
-                  try {
-                    const committedRes = await secureAxios.get("/api/ProjectManagement/get-committed-hours", {
-                      params: {
-                        projectId: proj.projectId,
-                        staffId: staffId
-                      }
-                    });
-                    lastCommittedHours = committedRes.data?.committedHours || 0;
-                  } catch (err) {
-                    console.warn(`Failed to fetch last committed hours for project ${proj.projectId}:`, err);
-                  }
-              
-                  try {
-                    const totalCommittedRes = await axios.get(`https://localhost/api/ProjectFteManagement/project/${proj.projectId}/committed-hours`);
-                    totalCommittedHours = totalCommittedRes.data?.totalCommittedHours || 0;
-                  } catch (err) {
-                    console.warn(`Failed to fetch total committed hours for project ${proj.projectId}:`, err);
-                  }
-              
-                  return {
-                    projectId: proj.projectId || "N/A",
-                    primeCode: proj.primeCode || "N/A",
-                    allocatedHours: proj.allocatedHours ?? 0,
-                    assignedBy: proj.assignedByName || "Unknown",
-                    committedHours: totalCommittedHours, // use this as readonly committed hours
-                    inputHours: totalCommittedHours,     // default same as above
-                    remainingHrs: proj.allocatedHours - lastCommittedHours,
+                    let lastCommittedHours = 0;
+                    let totalCommittedHours = 0;
 
-                    lastCommittedHours: lastCommittedHours
-                  };
+                    try {
+                        const committedRes = await secureAxios.get("/api/ProjectManagement/get-committed-hours", {
+                            params: {
+                                projectId: proj.projectId,
+                                staffId: staffId
+                            }
+                        });
+                        lastCommittedHours = committedRes.data?.committedHours || 0;
+                    } catch (err) {
+                        console.warn(`Failed to fetch last committed hours for project ${proj.projectId}:`, err);
+                    }
+
+                    try {
+                        const totalCommittedRes = await axios.get(`https://opsvisionbe.integrator-orange.com/api/ProjectFteManagement/project/${proj.projectId}/committed-hours`);
+                        totalCommittedHours = totalCommittedRes.data?.totalCommittedHours || 0;
+                    } catch (err) {
+                        console.warn(`Failed to fetch total committed hours for project ${proj.projectId}:`, err);
+                    }
+
+                    return {
+                        projectId: proj.projectId || "N/A",
+                        primeCode: proj.primeCode || "N/A",
+                        allocatedHours: proj.allocatedHours ?? 0,
+                        assignedBy: proj.assignedByName || "Unknown",
+                        committedHours: totalCommittedHours, // use this as readonly committed hours
+                        inputHours: totalCommittedHours,     // default same as above
+                        remainingHrs: proj.allocatedHours - lastCommittedHours,
+                        lastCommittedHours: lastCommittedHours
+                    };
                 })
-              );
-              
-    
+            );
+
             this.setState({ projects: projectsWithHours });
-    
+
         } catch (error) {
             console.error("Error fetching project data:", error);
             alert(error.message || "Unauthorized or failed to fetch project data.");
         }
     };
+
     handleHoursChange = (index, hours) => {
         if (hours < 0) return;
         this.setState(prevState => ({
@@ -114,10 +112,11 @@ class Manager extends Component {
             return;
         }
         const totalCommitted = project.lastCommittedHours + committedHours;
-if (totalCommitted > project.allocatedHours) {
-    alert(`Total committed hours (${totalCommitted}) exceed allocated hours (${project.allocatedHours}).`);
-    return;
-}
+        if (totalCommitted > project.allocatedHours) {
+            alert(`Total committed hours (${totalCommitted}) exceed allocated hours (${project.allocatedHours}).`);
+            return;
+        }
+
         const staffId = localStorage.getItem('staffId');
         if (!staffId) {
             alert("Staff ID not found. Please log in again.");
@@ -132,15 +131,14 @@ if (totalCommitted > project.allocatedHours) {
                 completedHours: 0
             }
         };
-        
 
         const isFirstEntry = project.committedHours === 0;
 
         try {
             const response = await secureAxios[isFirstEntry ? 'post' : 'put'](
                 isFirstEntry
-                ? "/api/ProjectFteManagement/commit-hours"
-                : "/api/ProjectFteManagement/commit-hours",
+                    ? "/api/ProjectFteManagement/commit-hours"
+                    : "/api/ProjectFteManagement/commit-hours",
                 requestBody
             );
 
@@ -175,11 +173,11 @@ if (totalCommitted > project.allocatedHours) {
                     <h1 className="name">My Prime</h1>
                     <button onClick={this.logout} title="Logout" className="logout-button">Logout</button>
                 </div>
-               <div className="home-icon-containerss"  title="Go to Homepage" onClick={() => this.props.navigate("/landing")}>
-               <h className="hm">Home</h>
-                  {/* <img src={homeIcon} alt="Home" className="home-iconss" /> */}
+                <div className="home-icon-containerss" title="Go to Homepage" onClick={() => this.props.navigate("/landing")}>
+                    <h className="hm">Home</h>
+                    {/* <img src={homeIcon} alt="Home" className="home-iconss" /> */}
                 </div>
-{/* <h1 className="instr">Select a PrimeCode to Begin Assignment</h1> */}
+                {/* <h1 className="instr">Select a PrimeCode to Begin Assignment</h1> */}
                 <div className="content-container">
                     <div className="table-container">
                         <table className="project-table">
@@ -208,7 +206,7 @@ if (totalCommitted > project.allocatedHours) {
                                                                 primeCode: project.primeCode,
                                                                 allocatedHours: project.allocatedHours,
                                                                 projectId: project.projectId,
-                                                                remainingHrs:project.remainingHrs,
+                                                                remainingHrs: project.remainingHrs,
                                                             },
                                                         })
                                                     }

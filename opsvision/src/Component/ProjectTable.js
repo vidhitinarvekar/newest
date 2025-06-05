@@ -18,7 +18,7 @@ const ProjectTable = () => {
   const [allocatedHours, setAllocatedHours] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  const itemsPerPage = 5;
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -200,10 +200,10 @@ const ProjectTable = () => {
 
   return (
     <div className="container">
-      {/* Home Icon */}
-      <div className="homes-icon-containers" onClick={() => navigate("/landing")}>
+      
+      {/* <div className="homes-icon-containers" onClick={() => navigate("/landing")}>
       <h className="hhm">Home</h>
-  {/* <img src={homeIcon} alt="Home" className="home-icons" /> */}
+  
 </div>
 
       <div className="logo-container">
@@ -220,8 +220,34 @@ const ProjectTable = () => {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
-      </div>
+      </div> */}
 
+<div className="custom-header">
+  {/* Logo */}
+  <div className="custom-logo-container">
+    <img src={logo} alt="Logo" className="custom-logo" />
+  </div>
+
+  {/* Title */}
+  <h1 className="custom-title">Project Management System</h1>
+
+  {/* Search */}
+  <div className="custom-search-container">
+    <input
+      type="text"
+      className="custom-search-bar"
+      placeholder="Search by Prime Code..."
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+    />
+  </div>
+
+   {/* Home Button */}
+   <div className="custom-home-btn" onClick={() => navigate("/landing")}>
+    <h className="custom-home-text">Home</h>
+  </div>
+  </div>
+  <div className="table-section">
       <div className="table-wrapper">
         <table className="table table-bordered table-striped">
           <thead className="thead-light">
@@ -305,6 +331,7 @@ const ProjectTable = () => {
       </div>
 
       {renderPagination()}
+    </div>
     </div>
   );
 };

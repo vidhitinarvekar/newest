@@ -6,27 +6,31 @@ import logo from "./images.png";
 import { login } from "../Services/api";
 
 const Login = ({ setIsAuthenticated = () => {} }) => {
-  const [email, setEmail] = useState("");
+  const [usernameInput, setUsernameInput] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const domain = "integrator-orange.com";
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    if (email.trim() === "") {
-      setError("Email is required!");
+    if (usernameInput.trim() === "" || password.trim() === "") {
+      setError("Username and password are required!");
       return;
     }
 
+    const username = usernameInput.trim() + "@" + domain;
+
     try {
-      const response = await login(email);
+      const response = await login(username, password);
 
       if (!response) {
         setError("Invalid login credentials.");
         return;
       }
 
-      const { token, role, name, email: userEmail, staffId ,  isProjectOwner} = response;
+      const { token, role, name, email: userEmail, staffId , isProjectOwner } = response;
 
       if (!role) {
         setError("Role information is missing. Please contact admin.");
@@ -63,14 +67,19 @@ const Login = ({ setIsAuthenticated = () => {} }) => {
 
         <form onSubmit={handleLogin}>
           <input
-            type="email"
-            placeholder="Email ID"
+            type="text"
+            placeholder="Username"
             required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={usernameInput}
+            onChange={(e) => setUsernameInput(e.target.value)}
           />
-          <input type="password" placeholder="Password (Optional)" disabled />
-
+          <input
+            type="password"
+            placeholder="Password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
           <button type="submit">Login</button>
         </form>
       </div>
