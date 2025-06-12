@@ -7,14 +7,18 @@ const ownerId = localStorage.getItem("staffId");
 axios.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    config.headers["Content-Type"] = "application/json";
-    return config;
+    return {
+      ...config,
+      headers: {
+        ...config.headers,
+        Authorization: token ? `Bearer ${token}` : config.headers?.Authorization,
+        "Content-Type": "application/json",
+      },
+    };
   },
-  (error) => Promise.reject(error)
+  Promise.reject
 );
+
 
 // Fetch all projects
 export const getProjects = async () => {
@@ -66,7 +70,7 @@ export const getProjectsByOwnerId = async (staffId) => {
 // Delete FTE allocation from a project
 export const deleteProjectFte = async (primeCode, staffId) => {
   try {
-    const response = await axios.delete(`${API_BASE_URL}/ProjectFteEmployee/delete/${primeCode}/${staffId}`);
+    const response = await axios.delete(`${API_BASE_URL}/ProjectFteEmployee/deleteold/${primeCode}/${staffId}`);
     console.log("Delete response:", response.data); // Logs response for debugging
     return response.data;
   } catch (error) {

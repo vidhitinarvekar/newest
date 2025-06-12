@@ -78,12 +78,12 @@ const LandingPage = () => {
       </div>
 
       <div className="main-content">
-        <div className="top-right-profile" onClick={toggleProfile}>
+        {/* <div className="top-right-profile" onClick={toggleProfile}>
           <FaUserCircle size={24} className="profile-icon" />
           {showProfileName && <span className="profile-name">{userName}</span>}
-        </div>
+        </div> */}
 
-        <h1 className="welcome-title">Welcome to the Landing Page</h1>
+        <h1 className="welcome-title"><span style={{ color: "#ff7900" }}>Hello</span>, {userName} <span style={{ color: "#ff7900" }}>!</span></h1>
         <p className="welcome-subtext">
           Select a module from the sidebar to begin.
         </p>

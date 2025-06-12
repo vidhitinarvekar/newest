@@ -97,37 +97,38 @@ export default function Delegate() {
   };
 
   const fetchProjectFTEs = async (id) => {
-    try {
-      const response = await axios.get(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/manager-assignments/${id}`);
-      const employees = response.data;
-  
-      setAssignedEmployees(employees || []);
-  
-      const initialFte = {};
-      const committedMap = {};
-      let totalAllocated = 0;
-  
-      await Promise.all(
-        employees.map(async (emp) => {
-          const hours = parseFloat(emp.allocatedHours) || 0;
-          initialFte[emp.staffId] = hours;
-          totalAllocated += hours;
-  
-          const committed = await fetchCommittedHours(emp.staffId);
-          committedMap[emp.staffId] = committed;
-        })
-      );
-  
-      setFteHours(initialFte);
-      setCommittedHoursMap(committedMap);
-      setNewEmployees([]);
-  
-      const remaining = parseFloat(allocatedHours) - totalAllocated;
-      setRemainingHours(remaining >= 0 ? remaining : 0);
-    } catch (err) {
-      console.error("Error fetching FTEs:", err);
-    }
-  };
+  try {
+    const response = await axios.get(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/manager-assignments/${id}`);
+    const employees = response.data;
+
+    setAssignedEmployees(employees || []);
+
+    const initialFte = {};
+    const committedMap = {};
+    let totalAllocated = 0;
+
+    const committedPromises = employees.map(async (emp) => {
+      const hours = parseFloat(emp.allocatedHours) || 0;
+      initialFte[emp.staffId] = hours;
+      totalAllocated += hours;
+
+      const committed = await fetchCommittedHours(emp.staffId);
+      committedMap[emp.staffId] = committed;
+    });
+
+    await Promise.all(committedPromises);
+
+    setFteHours(initialFte);
+    setCommittedHoursMap(committedMap);
+    setNewEmployees([]);
+
+    const remaining = parseFloat(allocatedHours) - totalAllocated;
+    setRemainingHours(remaining >= 0 ? remaining : 0);
+  } catch (err) {
+    console.error("Error fetching FTEs:", err);
+  }
+};
+
   
   // const totalCommittedHours = Object.values(committedHours).reduce((sum, hours) => sum + hours, 0);
   const totalCommittedHours = Object.values(committedHoursMap).reduce(
@@ -238,14 +239,19 @@ export default function Delegate() {
   
   
   const handleDeleteFte = async (staffIdToDelete) => {
+    const delegatedBy = parseInt(localStorage.getItem('staffId'));
     try {
-      await axios.delete(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/delete/${projectId}/${staffIdToDelete}`);
+      await axios.delete(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/deletenew/${projectId}/${staffIdToDelete}`, {
+        data: {
+          delegatedBy: delegatedBy
+        }
+      });
+     
       fetchProjectFTEs(projectId);
     } catch (error) {
       console.error("Error deleting FTE:", error);
     }
   };
-
   return (
     <div className="delegate-wrapper">
       <div className="delegate-header">

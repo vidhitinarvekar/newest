@@ -22,7 +22,7 @@ Manager: [
     '/api/ProjectFteManagement/self-assigned-projects',
     '/api/ProjectFteManagement/my-assigned-projects/exclude-self',
     '/api/ProjectFteManagement/commit-hours',
-    '/api/ProjectFteManagement/commit-hours'
+    
   ],
   Employee: [
     '/api/ProjectManagement/user-projects',
@@ -32,7 +32,7 @@ Manager: [
     '/api/ProjectFteManagement/self-assigned-projects',
     '/api/ProjectFteManagement/my-assigned-projects/exclude-self',
     '/api/ProjectFteManagement/commit-hours',
-    '/api/ProjectFteManagement/commit-hours'
+
   ]
 };
 

@@ -66,13 +66,16 @@ const Login = ({ setIsAuthenticated = () => {} }) => {
         {error && <p className="error-message">{error}</p>}
 
         <form onSubmit={handleLogin}>
-          <input
-            type="text"
-            placeholder="Username"
-            required
-            value={usernameInput}
-            onChange={(e) => setUsernameInput(e.target.value)}
-          />
+  
+  <input
+    id="cuid"
+    type="text"
+    placeholder="Enter your CUID"
+    required
+    value={usernameInput}
+    onChange={(e) => setUsernameInput(e.target.value)}
+  />
+
           <input
             type="password"
             placeholder="Password"

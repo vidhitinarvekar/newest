@@ -29,48 +29,50 @@ export default function ProjectDetails() {
   const [delegatedHours, setDelegatedHours] = useState({});
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [committedHours, setCommittedHours] = useState({});
+const fetchAssignedFTEs = async () => {
+  if (!projectId) return;
 
-  const fetchAssignedFTEs = async () => {
-    if (!projectId) return;
+  try {
+    // Initiate both API calls concurrently
+    const [assignedFTEsResponse, allProjectsResponse] = await Promise.all([
+      axios.get(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/${projectId}`),
+      axios.get("https://opsvisionbe.integrator-orange.com/api/ProjectFte/all")
+    ]);
 
-    try {
-      // Fetching project-specific data (assigned FTEs)
-      const response = await axios.get(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/${projectId}`);
-      const { assignedEmployees, remainingHours, projectName, primeCode } = response.data;
+    const { assignedEmployees, remainingHours, projectName, primeCode } = assignedFTEsResponse.data;
+    setAllocatedFTEs(assignedEmployees || []);
+    setRemainingHours(remainingHours || 0);
+    setProjectName(projectName || "Unknown Project");
+    setPrimeCode(primeCode || "N/A");
 
-      setAllocatedFTEs(assignedEmployees || []);
-      setRemainingHours(remainingHours || 0);
-      setProjectName(projectName || "Unknown Project");
-      setPrimeCode(primeCode || "N/A");
+    const allocatedSum = (assignedEmployees || []).reduce(
+      (sum, fte) => sum + (Number(fte.allocatedHours) || 0),
+      0
+    );
+    setTotalHours((remainingHours || 0) + allocatedSum);
 
-      const allocatedSum = (assignedEmployees || []).reduce(
-        (sum, fte) => sum + (Number(fte.allocatedHours) || 0),
-        0
-      );
-      setTotalHours((remainingHours || 0) + allocatedSum);
+    const initialHours = {};
+    (assignedEmployees || []).forEach((fte) => {
+      initialHours[fte.staffId] = fte.allocatedHours;
+    });
+    setFteHours(initialHours);
+    setDelegates({});
 
-      const initialHours = {};
-      (assignedEmployees || []).forEach((fte) => {
-        initialHours[fte.staffId] = fte.allocatedHours;
-      });
-      setFteHours(initialHours);
-      setDelegates({});
+    await fetchAllCommittedHours(assignedEmployees);
 
-      await fetchAllCommittedHours(assignedEmployees);
-
-      // Now, let's fetch the total allocated hours for the specific project
-      const allProjectsResponse = await axios.get("https://opsvisionbe.integrator-orange.com/api/ProjectFte/all");
-      const projectData = allProjectsResponse.data.find(
-        (project) => project.projectId === parseInt(projectId)
-      );
-      if (projectData) {
-        setTotalHours(projectData.allocatedHours || 0); // Update total hours from the fetched data
-      }
-
-    } catch (error) {
-      console.error("Error fetching project data:", error);
+    // Now, let's fetch the total allocated hours for the specific project
+    const projectData = allProjectsResponse.data.find(
+      (project) => project.projectId === parseInt(projectId)
+    );
+    if (projectData) {
+      setTotalHours(projectData.allocatedHours || 0); // Update total hours from the fetched data
     }
-  };
+
+  } catch (error) {
+    console.error("Error fetching project data:", error);
+  }
+};
+
 
   const fetchCommittedHours = async (staffId, projectId) => {
     try {
@@ -287,14 +289,27 @@ export default function ProjectDetails() {
     setShowSearchResults(false);
   };
 
-  const handleDelegateHoursChange = (mainFteId, delegateFteId, hours) => {
-    setDelegatedHours((prev) => ({ ...prev, [mainFteId]: { ...prev[mainFteId], [delegateFteId]: hours } }));
-    const remainingHours = Number(fteHours[mainFteId]) - hours;
-    setFteHours((prev) => ({
+ const handleDelegateHoursChange = (mainFteId, delegateFteId, hours) => {
+  setDelegatedHours(prev => {
+    const mainFteDelegates = prev[mainFteId] || {};
+    return {
+      ...prev,
+      [mainFteId]: { 
+        ...mainFteDelegates, 
+        [delegateFteId]: hours 
+      },
+    };
+  });
+
+  setFteHours(prev => {
+    const remainingHours = Number(prev[mainFteId]) - hours;
+    return {
       ...prev,
       [mainFteId]: remainingHours > 0 ? remainingHours : 0,
-    }));
-  };
+    };
+  });
+};
+
 
   const handleLogout = () => {
     localStorage.removeItem("jwtToken");

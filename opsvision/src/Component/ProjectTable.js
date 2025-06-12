@@ -19,32 +19,36 @@ const ProjectTable = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+useEffect(() => {
+  const fetchProjects = async () => {
+    try {
+      // Fetch projects and initialize state in parallel
+      const [projectsData] = await Promise.all([getProjects()]);
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const data = await getProjects();
-        setProjects(data);
+      // Initialize state based on fetched projects
+      const fteData = {};
+      const readonlyState = {};
+      const hoursData = {};
 
-        const fteData = {};
-        const readonlyState = {};
-        const hoursData = {};
+      projectsData.forEach((project) => {
+        fteData[project.projectId] = project.allocatedFte ?? 0;
+        hoursData[project.projectId] = project.allocatedHours ?? 0;
+        readonlyState[project.projectId] = true;
+      });
 
-        for (const project of data) {
-          fteData[project.projectId] = project.allocatedFte ?? 0;
-          hoursData[project.projectId] = project.allocatedHours ?? 0;
-          readonlyState[project.projectId] = true;
-        }
+      // Update state
+      setProjects(projectsData);
+      setFteAllocations(fteData);
+      setAllocatedHours(hoursData);
+      setFteReadonly(readonlyState);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    }
+  };
 
-        setFteAllocations(fteData);
-        setAllocatedHours(hoursData);
-        setFteReadonly(readonlyState);
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-      }
-    };
-    fetchProjects();
-  }, []);
+  fetchProjects();
+}, []);
+
 
   const handleFteChange = (projectId, value) => {
     if (value < 0) return;
