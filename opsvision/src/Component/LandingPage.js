@@ -11,7 +11,11 @@ const LandingPage = () => {
   const [userRole, setUserRole] = useState("");
   const [isProjectOwner, setIsProjectOwner] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedModule, setSelectedModule] = useState("");
+
+  // ✅ Get selectedModule from localStorage
+  const [selectedModule, setSelectedModule] = useState(() => {
+    return localStorage.getItem("selectedModule") || "";
+  });
 
   useEffect(() => {
     const name = localStorage.getItem("name") || "John Doe";
@@ -25,10 +29,8 @@ const LandingPage = () => {
   }, []);
 
   useEffect(() => {
-    if (!isLoading) {
-      if (!userRole) {
-        navigate("/login");
-      }
+    if (!isLoading && !userRole) {
+      navigate("/login");
     }
   }, [isLoading, userRole, isProjectOwner, navigate]);
 
@@ -39,6 +41,8 @@ const LandingPage = () => {
   const handleLogout = () => {
     localStorage.clear();
     sessionStorage.removeItem("hasRefreshed");
+     sessionStorage.removeItem("projectPage");
+    sessionStorage.removeItem("projectSearch");
     navigate("/login");
     window.location.reload();
   };
@@ -65,7 +69,10 @@ const LandingPage = () => {
               className={`nav-item ${
                 selectedModule === "primeAllocation" ? "active" : ""
               }`}
-              onClick={() => setSelectedModule("primeAllocation")}
+              onClick={() => {
+                setSelectedModule("primeAllocation");
+                localStorage.setItem("selectedModule", "primeAllocation"); // ✅ save it
+              }}
             >
               <FaTasks /> <span>Prime</span>
             </li>
@@ -78,63 +85,82 @@ const LandingPage = () => {
       </div>
 
       <div className="main-content">
-        {/* <div className="top-right-profile" onClick={toggleProfile}>
-          <FaUserCircle size={24} className="profile-icon" />
-          {showProfileName && <span className="profile-name">{userName}</span>}
-        </div> */}
+        <h1 className="welcome-title">
+          <span style={{ color: "#ff7900" }}>Hello</span>, {userName}{" "}
+          <span style={{ color: "#ff7900" }}>!</span>
+        </h1>
 
-        <h1 className="welcome-title"><span style={{ color: "#ff7900" }}>Hello</span>, {userName} <span style={{ color: "#ff7900" }}>!</span></h1>
         <p className="welcome-subtext">
           Select a module from the sidebar to begin.
         </p>
 
         {selectedModule === "primeAllocation" && (
-  <div className="prime-options">
-    <h2>Prime Options</h2>
+          <div className="prime-options">
+            <h2>Prime Options</h2>
 
-    {/* For VerticalLead: Only show Prime Management */}
-    {userRole === "VerticalLead" && (
-      <button onClick={() => navigate("/project-table")}>
-        FTE Allocation
-      </button>
-    )}
+            {userRole === "VerticalLead" && (
+              <button onClick={() => navigate("/project-table")}>
+                FTE Allocation
+              </button>
+            )}
 
-    {/* For Manager with isProjectOwner: Show both */}
-    {userRole === "Manager" && isProjectOwner && (
-      <>
-        <button onClick={() => navigate("/project-table")}>
+            {userRole === "Manager" && isProjectOwner && (
+              <>
+                <button onClick={() => navigate("/project-table")}>
+                  FTE Allocation
+                </button>
+                <button onClick={() => navigate("/dashboard")}>
+                  MyClocking
+                </button>
+                <button onClick={() => navigate("/manager")}>
+                 My Team Clocking 
+                </button>
+              </>
+            )}
+            {userRole === "ProjectOwner" && isProjectOwner && (
+<>
+<button onClick={() => navigate("/project-table")}>
+
           FTE Allocation
-        </button>
-        <button onClick={() => navigate("/dashboard")}>MyClocking</button>
-        <button onClick={() => navigate("/manager")}>My Team Clocking</button>
-      </>
+</button>
+<button onClick={() => navigate("/dashboard")}>MyClocking</button>
+<button onClick={() => navigate("/manager")}>My Team Clocking</button>
+</>
+
     )}
 
-    {/* For Manager (non-project owner): Show My Prime and Prime Assignment */}
-    {userRole === "Manager" && !isProjectOwner && (
-      <>
-        <button onClick={() => navigate("/dashboard")}>MyClocking</button>
-        <button onClick={() => navigate("/manager")}>My Team Clocking</button>
-      </>
-    )}
+ 
 
-    {/* For ProjectOwner only (not Manager or VerticalLead) */}
-    {userRole === "ProjectOwner" && !isProjectOwner && (
-      <>
-        <button onClick={() => navigate("/project-table")}>
-          FTE Allocation
-        </button>
-        <button onClick={() => navigate("/dashboard")}>MyClocking</button>
-        <button onClick={() => navigate("/manager")}>My Team Clocking</button>
-      </>
-    )}
+            {userRole === "Manager" && !isProjectOwner && (
+              <>
+                <button onClick={() => navigate("/dashboard")}>
+                  MyClocking
+                </button>
+                <button onClick={() => navigate("/manager")}>
+                  My Team Clocking
+                </button>
+              </>
+            )}
 
-    {/* For regular employees (not management) */}
-    {!showPrimeManagement && userRole === "Employee" && (
-      <button onClick={() => navigate("/manager")}>MyClocking</button>
-    )}
-  </div>
-)}
+            {userRole === "ProjectOwner" && !isProjectOwner && (
+              <>
+                <button onClick={() => navigate("/project-table")}>
+                  FTE Allocation
+                </button>
+                <button onClick={() => navigate("/dashboard")}>
+                  MyClocking
+                </button>
+                <button onClick={() => navigate("/manager")}>
+                  My Team Clocking 
+                </button>
+              </>
+            )}
+
+            {!showPrimeManagement && userRole === "Employee" && (
+              <button onClick={() => navigate("/manager")}>My Clocking</button>
+            )}
+          </div>
+        )}
 
         <div className="images">
           <img

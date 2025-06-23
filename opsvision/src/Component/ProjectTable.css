@@ -888,3 +888,21 @@ button:disabled, .form-control:disabled {
   margin-left: 90px;        /* Shift left to give room for home icon */
   margin-right: auto;
 }
+
+.edit-btns{
+  margin-left: 10px;
+}
+ 
+
+ 
+
+.owner-select-wrapper {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.owner-select-wrapper select {
+  padding: 4px;
+  font-size: 14px;
+}

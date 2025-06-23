@@ -22,6 +22,8 @@ Manager: [
     '/api/ProjectFteManagement/self-assigned-projects',
     '/api/ProjectFteManagement/my-assigned-projects/exclude-self',
     '/api/ProjectFteManagement/commit-hours',
+    '/api/ProjectFteManagement/project/',
+ 
     
   ],
   Employee: [

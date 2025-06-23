@@ -6,6 +6,10 @@ import illustration from './illus.png';
 import secureAxios from './utils/secureAxios';
 import withNavigation from './withNavigation'; // Import the withNavigation HOC
 import homeIcon from "./home.png";
+import Loader from './Loader';
+import TinyLoader from './TinyLoader';
+
+
 
 class Manager extends Component {
     constructor(props) {
@@ -17,18 +21,34 @@ class Manager extends Component {
                 name: 'John Doe',
                 email: localStorage.getItem('email') || ''
             },
-            editingIndex: null
+            editingIndex: null ,
+            
+             tinyLoaderIndex: null,
+              isLoading: true 
+        };
+        this.state = {
+            ...this.state,
+            searchQuery: "",
+            isProjectOwner: false 
         };
  
         this.role = localStorage.getItem("role"); // Store role once
     }
  
     async componentDidMount() {
+        const isProjectOwner = localStorage.getItem("isProjectOwner") === "true";
+    this.setState({ isProjectOwner });
+
         await this.fetchProjects();
     }
  
-    fetchProjects = async () => {
-        try {
+   fetchProjects = async (skipLoader = false) => {
+    try {
+        if (!skipLoader) {
+            this.setState({ isLoading: true });
+        }
+
+        
             const tokenFromLocalStorage = localStorage.getItem("token");  // or whatever your key is
  
             const response = await secureAxios.get("/api/ProjectFteManagement/my-assigned-projects/exclude-self");
@@ -111,31 +131,48 @@ class Manager extends Component {
         } catch (error) {
             console.error("Error fetching project data:", error);
             alert(error.message || "Unauthorized or failed to fetch project data.");
+            }
+                 finally {
+        if (!skipLoader) {
+            this.setState({ isLoading: false }); // only stop loader if it was started
         }
-    };
+    }
+
+};
+   
  
    
  
-    fetchCommittedHours = async (staffId, projectId) => {
-        try {
-          const response = await axios.get(`https://opsvisionbe.integrator-orange.com/api/ProjectFteManagement/project/${projectId}/committed-hours`, {
-            params: { projectId, managerStaffId: staffId }
-          });
-          return response.data.managerTeamTotal || 0;
-        } catch (error) {
-          console.error("Error fetching committed hours:", error);
-          return 0;
+  
+fetchCommittedHours = async (staffId, projectId) => {
+  try {
+    const { data } = await axios.get(
+      `https://opsvisionbe.integrator-orange.com/api/ProjectFteManagement/project/${projectId}/committed-hours`,
+      {
+        params: {
+          projectId,
+          managerStaffId: staffId
         }
-      };
-   
-    handleHoursChange = (index, hours) => {
-        if (hours < 0) return;
-        this.setState(prevState => ({
-            projects: prevState.projects.map((project, i) =>
-                i === index ? { ...project, inputHours: hours } : project
-            )
-        }));
-    };
+      }
+    );
+    return data.managerTeamTotal || 0;
+  } catch (error) {
+    console.error("Error fetching committed hours:", error);
+    return 0;
+  }
+};
+
+
+handleHoursChange = (index, hours) => {
+  if (hours < 0) return;
+
+  this.setState(prevState => ({
+    projects: prevState.projects.map((project, i) =>
+      i === index ? { ...project, inputHours: hours } : project
+    )
+  }));
+};
+
  
     logout = () => {
         localStorage.removeItem('userToken');
@@ -144,11 +181,22 @@ class Manager extends Component {
         localStorage.removeItem('token');
         localStorage.removeItem('role');
         localStorage.removeItem('staffId');
+         sessionStorage.removeItem("projectPage");
+    sessionStorage.removeItem("projectSearch");
         window.location.reload();
         window.location.href = '/login';
     };
+    
+nav = () => {
+        this.props.navigate('/dashboard');
+    };
+
+    ftes = () => {
+        this.props.navigate('/project-table');
+    };
  
     updateCommittedHours = async (index) => {
+        this.setState({ tinyLoaderIndex: index });
         const project = this.state.projects[index];
         if (!project) return;
    
@@ -196,15 +244,17 @@ class Manager extends Component {
             );
    
             if (response.status === 200) {
-                await this.fetchProjects();
+                await this.fetchProjects(true);
                 alert("Committed hours saved successfully!");
             } else {
                 alert("Failed to save committed hours.");
             }
         } catch (error) {
             alert("Error saving committed hours: " + (error.response ? JSON.stringify(error.response.data) : error.message));
-        }
-    };
+        }finally {
+        this.setState({ tinyLoaderIndex: null }); // hide loader after update
+    }
+};
    
     handleAssign = (project) => {
         this.props.navigate('/delegate', {
@@ -216,20 +266,47 @@ class Manager extends Component {
         });
     };
  
-    render() {
-        const { projects, editingIndex } = this.state;
- 
+  render() {
+  const { projects, editingIndex, isLoading } = this.state;
+
+  if (isLoading) {
+    return <Loader />;
+  }
+
+  
+
+
         return(
             <div className="dashboard-container">
                 <div className="hheader-container">
                     <img src={logo} alt="Orange Business Logo" className="logo" />
                     <h1 className="name">My Team Clocking</h1>
                     <button onClick={this.logout} title="Logout" className="logout-button">Logout</button>
+                    {this.role === "Manager" && (
+  <button onClick={this.nav} title="Self Assigned" className="nav">
+    <span style={{ color: "white", fontWeight: "bold" }}>MyClocking</span>
+  </button>
+  
+)}
+{this.state.isProjectOwner && (
+  <button onClick={this.ftes} title="FTE Allocation" className="fte">
+    <span style={{ color: "white", fontWeight: "bold" }}>FTE Allocation</span>
+  </button>
+)}
                 </div>
-                <div className="home-icon-containerss" title="Go to Homepage" onClick={() => this.props.navigate("/landing")}>
-                    <h className="hm">Home</h>
-                    {/* <img src={homeIcon} alt="Home" className="home-iconss" /> */}
+                <div className="home-icon-containerss"  title="Go to Homepage" onClick={() => {localStorage.setItem("selectedModule", "primeAllocation");  this.props.navigate("/landing")}}>
+               <span className="hm">Home</span>
                 </div>
+                <div className="search-container">
+  <input
+    type="text"
+    placeholder="Search by Assigned By or PrimeCode"
+    value={this.state.searchQuery}
+    onChange={(e) => this.setState({ searchQuery: e.target.value })}
+    className="search-input"
+  />
+</div>
+
                 {/* <h1 className="instr">Select a PrimeCode to Begin Assignment</h1> */}
                 <div className="content-container">
                     <div className="table-container">
@@ -241,13 +318,19 @@ class Manager extends Component {
                                     <th>Allocated Hours</th>
                                     <th>Commit Hours</th>
                                     <th>Your committed</th>
-                                    <th>Team committed</th>
+                                    {this.role === "Manager" && <th>Total committed</th>}
                                     {/* <th>Remaining Hours</th> */}
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {projects.map((project, index) => (
+                                {projects.filter((project) => {
+    const query = this.state.searchQuery.toLowerCase();
+    return (
+      project.assignedBy.toLowerCase().includes(query) ||
+      project.primeCode.toLowerCase().includes(query)
+    );
+  }).map((project, index) => (
                                     <tr key={index}>
                                         <td>{project.assignedBy}</td>
                                         <td>
@@ -293,14 +376,17 @@ class Manager extends Component {
                                                 </div>
                                             )}
                                         </td>
-                                        <td>{project.lastCommittedHours}</td>
-                                        <td>{this.state.committedHours[project.projectId] || 0}</td>
+                                        <td style={{ color: '#ff7900',fontWeight:'700' }}>{project.lastCommittedHours}</td>
+                                         {this.role === "Manager" && (
+  <td style={{ color: '#ff7900',fontWeight:'700' }}> {this.state.committedHours[project.projectId] || 0}</td>
+)}
                                         {/* <td>{project.remainingHrs}</td> */}
 
                                         <td>
-                                            <button onClick={() => this.updateCommittedHours(index)}>
-                                                Update
-                                            </button>
+                                        <button onClick={() => this.updateCommittedHours(index)}>
+                    {this.state.tinyLoaderIndex === index ? <TinyLoader /> : 'Update'}
+                </button>
+
                                         </td>
                                     </tr>
                                 ))}
@@ -313,6 +399,7 @@ class Manager extends Component {
                     </div>
                 </div>
             </div>
+
         );
     }
 }

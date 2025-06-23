@@ -6,6 +6,7 @@ import "./ProjectDetails.css";
 import logo from "./images.png";
 import homeIcon from "./home.png";
 import back from "./backs.png";
+import { useLocation } from 'react-router-dom';
 
 export default function ProjectDetails() {
   const { projectId } = useParams();
@@ -29,6 +30,8 @@ export default function ProjectDetails() {
   const [delegatedHours, setDelegatedHours] = useState({});
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [committedHours, setCommittedHours] = useState({});
+  const location = useLocation();
+  const fromPage = location.state?.fromPage || 1;
 const fetchAssignedFTEs = async () => {
   if (!projectId) return;
 
@@ -87,14 +90,16 @@ const fetchAssignedFTEs = async () => {
   };
 
   const fetchAllCommittedHours = async (assignedEmployees) => {
-    const hours = {};
-    for (const fte of assignedEmployees) {
-      const committedHour = await fetchCommittedHours(fte.staffId, projectId);
+  const fetchPromises = assignedEmployees.map(({ staffId }) =>
+    fetchCommittedHours(staffId, projectId).then((committedHour) => [staffId, committedHour])
+  );
 
-      hours[fte.staffId] = committedHour;
-    }
-    setCommittedHours(hours);
-  };
+  const results = await Promise.all(fetchPromises);
+
+  const hours = Object.fromEntries(results);
+  setCommittedHours(hours);
+};
+
 
   useEffect(() => {
     if (projectId) fetchAssignedFTEs();
@@ -164,15 +169,20 @@ const fetchAssignedFTEs = async () => {
     setShowSearchResults(false);
   };
 
-  const calculateCurrentRemainingHours = (excludeStaffId = null) => {
-    const totalMainAllocated = allocatedFTEs.reduce((sum, fte) => {
-      if (fte.staffId === excludeStaffId) return sum; // exclude current staff
-      const inputHours = Number(fteHours[fte.staffId]);
-      return sum + (isNaN(inputHours) ? 0 : inputHours);
-    }, 0);
+ const calculateCurrentRemainingHours = (excludeStaffId = null) => {
+  let totalMainAllocated = 0;
 
-    return Math.max(0, totalHours - totalMainAllocated);
-  };
+  for (const { staffId } of allocatedFTEs) {
+    if (staffId === excludeStaffId) continue;
+
+    const inputHours = parseFloat(fteHours[staffId]);
+    if (!isNaN(inputHours)) {
+      totalMainAllocated += inputHours;
+    }
+  }
+
+  return Math.max(0, totalHours - totalMainAllocated);
+};
 
 
   const isManager = localStorage.getItem("role") === "manager";
@@ -230,6 +240,18 @@ const fetchAssignedFTEs = async () => {
     } catch (error) {
       console.error("❌ Error saving FTE:", error);
       alert("Failed to save FTE. Please check your input and try again.");
+
+      // Extract the backend error message if available
+
+  const backendMessage =
+
+    error.response?.data?.message || // your custom backend message
+    error.message ||                 // fallback
+
+    "Failed to save FTE. Please try again.";
+ 
+  alert(backendMessage); // Display backend message to user
+ 
     }
 
 
@@ -269,6 +291,50 @@ const fetchAssignedFTEs = async () => {
     } catch (error) {
       console.error("Error updating FTE:", error);
       alert("Failed to update FTE.");
+
+      
+    }
+  };
+   const handleUpdateAllAssignedEmployees = async () => {
+    try {
+      for (const fte of allocatedFTEs) {
+        const staffId = fte.staffId;
+        const allocatedHours = Number(fteHours[staffId]);
+  
+        const delegateeList = (delegates[staffId] || [])
+          .filter((delegate) => Number(delegatedHours[staffId]?.[delegate.staffId]) > 0)
+          .map((delegate) => ({
+            staffId: delegate.staffId,
+            staffName: `${delegate.firstName} ${delegate.lastName}`,
+            allocatedHours: Number(delegatedHours[staffId][delegate.staffId]),
+          }));
+  
+        if (!isManager && (!allocatedHours || allocatedHours <= 0)) {
+          alert(`Allocated hours must be greater than 0 for ${fte.firstName} ${fte.lastName}.`);
+          return;
+        }
+  
+        if (!isManager && allocatedHours > calculateCurrentRemainingHours(staffId)) {
+          alert(`Not enough remaining hours for ${fte.firstName} ${fte.lastName}.`);
+          return;
+        }
+  
+        const payload = {
+          projectId: Number(projectId),
+        primeCode,
+        staffId: isManager ? 0 : staffId,
+        allocatedHours: isManager ? 0 : allocatedHours,
+        delegatees: delegateeList,
+        };
+  
+        await axios.put("https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/update", payload);
+      }
+  
+      fetchAssignedFTEs();
+      alert("All assigned employees updated successfully.");
+    } catch (error) {
+      console.error("❌ Error updating all assigned FTEs:", error);
+      alert("Failed to update one or more FTEs.");
     }
   };
 
@@ -313,6 +379,9 @@ const fetchAssignedFTEs = async () => {
 
   const handleLogout = () => {
     localStorage.removeItem("jwtToken");
+    
+ sessionStorage.removeItem("projectPage");
+    sessionStorage.removeItem("projectSearch");
     navigate("/login");
     window.location.reload();
   };
@@ -328,7 +397,8 @@ const fetchAssignedFTEs = async () => {
         <img src={logo} alt="Orange Business Logo" className="logo" />
         <h1 className="naames">Allocate Hours</h1>
         
-        <div className="backa" title="back" style={{ marginRight: '8px' }} onClick={() => navigate("/project-table")}>
+        <div className="backa" title="back" style={{ marginRight: '8px' }} onClick={() => navigate(`/project-table?page=${fromPage}`)}
+>
           {/* <img src={back} alt="Previous Page" className="back-icons" /> */}
 
           <h3 className="previous">Previous Page</h3>
@@ -383,6 +453,7 @@ const fetchAssignedFTEs = async () => {
             </div>
           )}
         </div>
+        <button onClick={handleUpdateAllAssignedEmployees} className="oranges-btn">Update All</button>
 
         {/* FTE Table */}
         <h3 className="table-heading">Allocated FTEs</h3>

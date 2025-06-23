@@ -4,11 +4,14 @@ import { FaEdit, FaCheck } from "react-icons/fa";
 import "./ProjectTable.css";
 import logo from "./images.png";
 import homeIcon from "./home.png"; // <-- Import your home icon here
+import axios from "axios";
 import {
   getProjects,
   updateProjectFte,
   allocateProjectFte,
 } from "../Services/api";
+import Loader from "./Loader"; // adjust the path if needed
+
 
 const ProjectTable = () => {
   const navigate = useNavigate();
@@ -18,10 +21,18 @@ const ProjectTable = () => {
   const [allocatedHours, setAllocatedHours] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const itemsPerPage = 5;
+  const [projectOwners, setProjectOwners] = useState({});
+const [ownerReadonly, setOwnerReadonly] = useState({});
+const [ownerOptions, setOwnerOptions] = useState({});
+const [selectedStaffIds, setSelectedStaffIds] = useState({});
 useEffect(() => {
   const fetchProjects = async () => {
     try {
+      const data = await getProjects();
+        setProjects(data);
+      setLoading(true);
       // Fetch projects and initialize state in parallel
       const [projectsData] = await Promise.all([getProjects()]);
 
@@ -29,26 +40,48 @@ useEffect(() => {
       const fteData = {};
       const readonlyState = {};
       const hoursData = {};
+      const owners = {};
+const readonly = {};
+const selected = {};
+const savedPage = sessionStorage.getItem("projectPage");
+  const savedSearch = sessionStorage.getItem("projectSearch");
+  
 
-      projectsData.forEach((project) => {
-        fteData[project.projectId] = project.allocatedFte ?? 0;
-        hoursData[project.projectId] = project.allocatedHours ?? 0;
-        readonlyState[project.projectId] = true;
-      });
 
-      // Update state
-      setProjects(projectsData);
-      setFteAllocations(fteData);
-      setAllocatedHours(hoursData);
-      setFteReadonly(readonlyState);
+  if (savedPage) setCurrentPage(parseInt(savedPage));
+  if (savedSearch) setSearchQuery(savedSearch);
+
+        for (const project of data) {
+          fteData[project.projectId] = project.allocatedFte ?? 0;
+          hoursData[project.projectId] = project.allocatedHours ?? 0;
+          readonlyState[project.projectId] = true;
+        }
+
+        data.forEach((p) => {
+          owners[p.projectId] = p.ownerName || "";  // ← From API
+          readonly[p.projectId] = true;
+          selected[p.projectId] = null;
+        });
+
+        setFteAllocations(fteData);
+        setAllocatedHours(hoursData);
+        setFteReadonly(readonlyState);
+        setProjectOwners(owners);
+setOwnerReadonly(readonly);
+setSelectedStaffIds(selected);
+
+
+      
     } catch (error) {
       console.error("Error fetching projects:", error);
+    }
+ finally {
+      setLoading(false); // ✅ Hide loader after data loads
     }
   };
 
   fetchProjects();
 }, []);
-
 
   const handleFteChange = (projectId, value) => {
     if (value < 0) return;
@@ -114,6 +147,47 @@ useEffect(() => {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredProjects.slice(indexOfFirstItem, indexOfLastItem);
+  const userRole = localStorage.getItem("role")?.toLowerCase(); 
+  const fetchOwnerOptions = async (projectId) => {
+    try {
+      const response = await axios.get("https://opsvisionbe.integrator-orange.com/api/ProjectManagement/search-managers");
+      setOwnerOptions((prev) => ({ ...prev, [projectId]: response.data }));
+    } catch (err) {
+      console.error("Error fetching managers", err);
+    }
+  };
+  
+  const handleOwnerEdit = async (projectId) => {
+    await fetchOwnerOptions(projectId);
+    setOwnerReadonly((prev) => ({ ...prev, [projectId]: false }));
+  };
+  
+  const handleOwnerSelect = (projectId, staffId, fullName) => {
+    setSelectedStaffIds((prev) => ({ ...prev, [projectId]: staffId }));
+    setProjectOwners((prev) => ({ ...prev, [projectId]: fullName }));
+  };
+  
+  const handleOwnerSave = async (projectId) => {
+    const staffId = selectedStaffIds[projectId];
+    if (!staffId) {
+      alert("Please select a project owner.");
+      return;
+    }
+  
+    try {
+      await axios.put("https://opsvisionbe.integrator-orange.com/api/ProjectManagement/update-projectowner-staff", {
+        projectId,
+        newStaffId: staffId,
+      });
+  
+      setOwnerReadonly((prev) => ({ ...prev, [projectId]: true }));
+  
+      // optionally update projects state if needed
+    } catch (error) {
+      console.error("Failed to update project owner:", error);
+    }
+  };
+  
 
   const renderPagination = () => {
     const pages = [];
@@ -202,29 +276,12 @@ useEffect(() => {
     );
   };
 
-  return (
+  return loading ? (
+  <Loader />
+) : (
     <div className="container">
       
-      {/* <div className="homes-icon-containers" onClick={() => navigate("/landing")}>
-      <h className="hhm">Home</h>
-  
-</div>
-
-      <div className="logo-container">
-        <img src={logo} alt="Logo" className="logo" />
-      </div>
-
-      <h1 className="text-center">Project Management System</h1>
-
-      <div className="search-container">
-        <input
-          type="text"
-          className="search-bar"
-          placeholder="Search by Prime Code..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div> */}
+    
 
 <div className="custom-header">
   {/* Logo */}
@@ -247,7 +304,9 @@ useEffect(() => {
   </div>
 
    {/* Home Button */}
-   <div className="custom-home-btn" onClick={() => navigate("/landing")}>
+   <div className="custom-home-btn"  onClick={() => {
+    localStorage.setItem("selectedModule", "primeAllocation");
+    navigate("/landing");}}>
     <h className="custom-home-text">Home</h>
   </div>
   </div>
@@ -257,6 +316,7 @@ useEffect(() => {
           <thead className="thead-light">
             <tr>
               <th>PrimeCode</th>
+              {userRole === "verticallead" && <th>Project Owner</th>}
               <th>Expiration Date</th>
               <th>FTE Allocated</th>
               <th>Total Hours</th>
@@ -278,12 +338,55 @@ useEffect(() => {
                         state={{
                           totalAllocatedHours:
                             allocatedHours[project.projectId] || 0,
+                          fromPage: currentPage ,
+                          searchQuery: searchQuery
                         }}
                         className="project-link"
+                        onClick={() => {
+                          sessionStorage.setItem("projectPage", currentPage);
+                          sessionStorage.setItem("projectSearch", searchQuery);
+                        }}
                       >
                         {project.primeCode}
                       </Link>
                     </td>
+                    {userRole === "verticallead" && (
+  <td>
+    {ownerReadonly[project.projectId] ? (
+      <>
+        {projectOwners[project.projectId] || "--"}
+        <button className="edit-btns" onClick={() => handleOwnerEdit(project.projectId)}>
+          <FaEdit />
+        </button>
+      </>
+    ) : (
+      <div className="owner-select-wrapper">
+        <select
+          value={selectedStaffIds[project.projectId] || ""}
+          onChange={(e) => {
+            const staffId = parseInt(e.target.value);
+            const selected = ownerOptions[project.projectId]?.find(
+              (opt) => opt.staffId === staffId
+            );
+            if (selected) {
+              handleOwnerSelect(project.projectId, selected.staffId, selected.fullName);
+            }
+          }}
+        >
+          <option value="">Select Owner</option>
+          {(ownerOptions[project.projectId] || []).map((owner) => (
+            <option key={owner.staffId} value={owner.staffId}>
+              {owner.fullName}
+            </option>
+          ))}
+        </select>
+        <button className="ok-btn" onClick={() => handleOwnerSave(project.projectId)}>
+          <FaCheck />
+        </button>
+      </div>
+    )}
+  </td>
+)}
                     <td>
                       {project.expiryDate
                         ? new Date(project.expiryDate).toLocaleDateString()
