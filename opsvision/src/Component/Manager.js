@@ -280,7 +280,10 @@ nav = () => {
             <div className="dashboard-container">
                 <div className="hheader-container">
                     <img src={logo} alt="Orange Business Logo" className="logo" />
-                    <h1 className="name">My Team Clocking</h1>
+                    <h1 className="name">
+  {this.role === 'employee' ? 'My Clocking' : 'My Team Clocking'}
+</h1>
+
                     <button onClick={this.logout} title="Logout" className="logout-button">Logout</button>
                     {this.role === "Manager" && (
   <button onClick={this.nav} title="Self Assigned" className="nav">

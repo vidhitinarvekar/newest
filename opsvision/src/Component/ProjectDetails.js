@@ -295,12 +295,84 @@ const fetchAssignedFTEs = async () => {
       
     }
   };
+   
+  const handleSaveAllFTEs = async () => {
+     console.log("Update All button clicked");
+    try {
+      let remainingPool = totalHours - allocatedFTEs.reduce((sum, fte) => {
+        return newFTEs.find(n => n.staffId === fte.staffId)
+          ? sum
+          : sum + (Number(fteHours[fte.staffId]) || 0);
+      }, 0);
+  
+      const payloadList = [];
+  
+      for (const fte of newFTEs) {
+        const staffId = fte.staffId;
+        const allocated = Number(fteHours[staffId]) || 0;
+  
+        if (!isManager && allocated <= 0) {
+          alert(`Allocated hours must be greater than 0 for ${fte.firstName} ${fte.lastName}.`);
+          return;
+        }
+  
+        if (!isManager && allocated > remainingPool) {
+          alert(`Not enough remaining hours for ${fte.firstName} ${fte.lastName}.`);
+          return;
+        }
+  
+        remainingPool -= allocated;
+  
+        const delegateeList = (delegates[staffId] || [])
+          .filter((d) => Number(delegatedHours[staffId]?.[d.staffId]) > 0)
+          .map((d) => ({
+            staffId: d.staffId,
+            staffName: `${d.firstName} ${d.lastName}`,
+            allocatedHours: Number(delegatedHours[staffId][d.staffId]),
+          }));
+  
+        payloadList.push({
+          projectId: Number(projectId),
+          primeCode,
+          staffId: isManager ? 0 : staffId,
+          allocatedHours: isManager ? 0 : allocated,
+          delegatees: delegateeList,
+        });
+      }
+  
+      const failedList = [];
+  
+      // Submit each payload individually
+      for (const payload of payloadList) {
+        try {
+          await axios.post("https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/allocate", payload);
+        } catch (err) {
+          console.error(`❌ Failed to save for staffId ${payload.staffId}`, err);
+          failedList.push(payload.staffId);
+        }
+      }
+  
+      if (failedList.length > 0) {
+        alert(`Some FTEs could not be saved. Failed staff IDs: ${failedList.join(", ")}`);
+      }
+  
+      setNewFTEs([]);
+      fetchAssignedFTEs(); // ✅ Only keep this
+      // fetchProjects(); ❌ Removed to fix no-undef error
+  
+    } catch (error) {
+      console.error("❌ Unexpected error during save:", error);
+      alert("Unexpected error occurred during Save All.");
+    }
+  };
    const handleUpdateAllAssignedEmployees = async () => {
     try {
+      const failedStaff = [];
+
       for (const fte of allocatedFTEs) {
         const staffId = fte.staffId;
         const allocatedHours = Number(fteHours[staffId]);
-  
+
         const delegateeList = (delegates[staffId] || [])
           .filter((delegate) => Number(delegatedHours[staffId]?.[delegate.staffId]) > 0)
           .map((delegate) => ({
@@ -308,33 +380,43 @@ const fetchAssignedFTEs = async () => {
             staffName: `${delegate.firstName} ${delegate.lastName}`,
             allocatedHours: Number(delegatedHours[staffId][delegate.staffId]),
           }));
-  
+
         if (!isManager && (!allocatedHours || allocatedHours <= 0)) {
           alert(`Allocated hours must be greater than 0 for ${fte.firstName} ${fte.lastName}.`);
-          return;
+          continue;
         }
-  
+
         if (!isManager && allocatedHours > calculateCurrentRemainingHours(staffId)) {
           alert(`Not enough remaining hours for ${fte.firstName} ${fte.lastName}.`);
-          return;
+          continue;
         }
-  
+
         const payload = {
           projectId: Number(projectId),
-        primeCode,
-        staffId: isManager ? 0 : staffId,
-        allocatedHours: isManager ? 0 : allocatedHours,
-        delegatees: delegateeList,
+          primeCode,
+          staffId: isManager ? 0 : staffId,
+          allocatedHours: isManager ? 0 : allocatedHours,
+          delegatees: delegateeList,
         };
-  
-        await axios.put("https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/update", payload);
+
+        try {
+          await axios.put("https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/update", payload);
+        } catch (error) {
+          console.error("Failed to update", error);
+          failedStaff.push(`${fte.firstName} ${fte.lastName}`);
+        }
       }
-  
-      fetchAssignedFTEs();
-      alert("All assigned employees updated successfully.");
+
+      await fetchAssignedFTEs();
+
+      if (failedStaff.length > 0) {
+        alert(`Some FTEs failed to update: ${failedStaff.join(", ")}`);
+      } else {
+        alert("All assigned employees updated successfully.");
+      }
     } catch (error) {
-      console.error("❌ Error updating all assigned FTEs:", error);
-      alert("Failed to update one or more FTEs.");
+      console.error("❌ Unexpected error during bulk update:", error);
+      alert("Unexpected error occurred while updating assigned employees.");
     }
   };
 
@@ -439,21 +521,30 @@ const fetchAssignedFTEs = async () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setShowSearchResults(true)}
           />
+{showSearchResults && searchResults.length > 0 && (
+  <div className="search-results" ref={searchResultsRef}>
+    <ul>
+      {searchResults.map((employee) => (
+        <li key={employee.staffId}>
+          <span>{employee.firstName} {employee.lastName} ({employee.email})</span>
+          <button 
+            onClick={() => handleSelectFTE(employee)} 
+            className="cursor-pointer"
+          >
+            Select
+          </button>
+        </li>
+        
+      ))}
+    </ul>
+    
+  </div>
+)}
+</div>
+{/* <button onClick={handleUpdateAllAssignedEmployees} className="oranges-btn">
+  Update All
+</button> */}
 
-          {showSearchResults && searchResults.length > 0 && (
-            <div className="search-results" ref={searchResultsRef}>
-              <ul>
-                {searchResults.map((employee) => (
-                  <li key={employee.staffId}>
-                    <span>{employee.firstName} {employee.lastName} ({employee.email})</span>
-                    <button onClick={() => handleSelectFTE(employee)}>Select</button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-        <button onClick={handleUpdateAllAssignedEmployees} className="oranges-btn">Update All</button>
 
         {/* FTE Table */}
         <h3 className="table-heading">Allocated FTEs</h3>
@@ -488,7 +579,8 @@ const fetchAssignedFTEs = async () => {
                     <td>{committedHours[fte.staffId] || 0}</td>
                     <td className="table-actions">
                       {newFTEs.some((n) => n.staffId === fte.staffId) ? (
-                        <button onClick={() => handleSaveFTE(fte.staffId)}>Save</button>
+                         <button onClick={handleSaveAllFTEs} className="orange-btn" style={{ marginRight: '8px' }}>Save All</button>
+
                       ) : (
                         <>
                           <button onClick={() => handleUpdateFTE(fte.staffId)} style={{ marginRight: '8px' }}>Update</button>

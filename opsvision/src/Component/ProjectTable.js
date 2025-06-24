@@ -9,6 +9,7 @@ import {
   getProjects,
   updateProjectFte,
   allocateProjectFte,
+  getProjectsByOwnerId
 } from "../Services/api";
 import Loader from "./Loader"; // adjust the path if needed
 
@@ -30,7 +31,16 @@ const [selectedStaffIds, setSelectedStaffIds] = useState({});
 useEffect(() => {
   const fetchProjects = async () => {
     try {
-      const data = await getProjects();
+      const role = localStorage.getItem("role")?.toLowerCase();
+        const staffId = localStorage.getItem("staffId"); // make sure it's stored on login
+        let data = [];
+  
+        if (role === "verticallead") {
+          data = await getProjects();
+        } else {
+          data = await getProjectsByOwnerId(staffId); // use your imported function
+        }
+  
         setProjects(data);
       setLoading(true);
       // Fetch projects and initialize state in parallel

@@ -204,20 +204,27 @@ const handleSaveAllNewEmployees = async () => {
         alert(`Only ${remainingHours} hours are remaining. Cannot assign ${totalToAssign}.`);
         return;
       }
- 
+       const failedStaff=[];
       for (const payload of payloadList) {
-        await axios.post(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/allocate`, payload);
+       try{ await axios.post(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/allocate`, payload);
+      }catch (err) {
+          console.error(`❌ Failed to save for staffId ${payload.staffId}:`, err);
+          failedStaff.push(payload.staffId);
+        }
       }
- 
+  
+      if (failedStaff.length > 0) {
+        alert(`Some employees could not be saved. Failed Staff IDs: ${failedStaff.join(", ")}`);
+      }
+  
       setNewEmployees([]);
       fetchProjectFTEs(projectId);
- 
+  
     } catch (error) {
-      console.error("Error saving new employees:", error);
-      alert("Failed to allocate one or more employees.");
+      console.error("❌ Unexpected error while saving new employees:", error);
+      alert("Unexpected error occurred during allocation.");
     }
   };
- 
  
   // const handleAllocateNewEmployee = async (employeeId) => {
   //   try {
@@ -294,55 +301,56 @@ const handleSaveAllNewEmployees = async () => {
       alert("Failed to update hours.");
     }
   };
-  const handleUpdateAllAssignedEmployees = async (staffIdToUpdate) => {
-    try {
-      let totalToAssign = 0;
-      const payloadList = [];
-      const newAllocated = parseFloat(fteHours[staffIdToUpdate]);
-const currentEmp = assignedEmployees.find(emp => emp.staffId === staffIdToUpdate);
-const loggedInStaffId = parseInt(localStorage.getItem("staffId"));
-  
-      for (const emp of assignedEmployees) {
-        const allocated = parseFloat(fteHours[emp.staffId]);
-  
-        if (!allocated || allocated <= 0) {
-          alert(`Please enter valid allocated hours for ${emp.firstName} ${emp.lastName}.`);
-          return;
-        }
-  
-        const prevAllocated = parseFloat(emp.allocatedHours || 0);
-        const delta = allocated - prevAllocated;
-        if (delta > remainingHours) {
-          alert(`Not enough remaining hours to assign additional ${delta} to ${emp.firstName} ${emp.lastName}.`);
-          return;
-        }
-  
-        totalToAssign += delta;
-  
-        payloadList.push({
-         projectId: parseInt(projectId),
-      primeCode,
-      staffId: loggedInStaffId,
-       delegatees: [
-        {
-          staffId: staffIdToUpdate,
-          staffName: currentEmp?.staffName || "Unknown",
-          allocatedHours: newAllocated
-        }
-      ]
-        });
+ const handleUpdateAllAssignedEmployees = async () => {
+  try {
+    let totalToAssign = 0;
+    const payloadList = [];
+    const loggedInStaffId = parseInt(localStorage.getItem("staffId"));
+
+    for (const emp of assignedEmployees) {
+      const allocated = parseFloat(fteHours[emp.staffId]);
+
+      if (!allocated || allocated <= 0) {
+        alert(`Please enter valid allocated hours for ${emp.firstName} ${emp.lastName}.`);
+        return;
       }
-  
-      for (const payload of payloadList) {
-        await axios.put(`https://localhost/api/ProjectFteEmployee/update`, payload);
+
+      const prevAllocated = parseFloat(emp.allocatedHours || 0);
+      const delta = allocated - prevAllocated;
+
+      if (delta > remainingHours) {
+        alert(`Not enough remaining hours to assign additional ${delta} to ${emp.firstName} ${emp.lastName}.`);
+        return;
       }
-  
-      fetchProjectFTEs(projectId);
-    } catch (error) {
-      console.error("Error updating all employees:", error);
-      alert("Failed to update one or more employees.");
+
+      totalToAssign += delta;
+
+      payloadList.push({
+        projectId: parseInt(projectId),
+        primeCode,
+        staffId: loggedInStaffId,
+        delegatees: [
+          {
+            staffId: emp.staffId,
+            staffName: emp?.staffName || `${emp.firstName} ${emp.lastName}`,
+            allocatedHours: allocated
+          }
+        ]
+      });
     }
-  };
+
+    // Perform all updates
+    for (const payload of payloadList) {
+      await axios.put(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/update`, payload);
+    }
+
+    fetchProjectFTEs(projectId);
+  } catch (error) {
+    console.error("Error updating all employees:", error);
+    alert("Failed to update one or more employees.");
+  }
+};
+
  
 
  
