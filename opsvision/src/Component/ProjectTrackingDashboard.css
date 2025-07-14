@@ -226,7 +226,7 @@ button {
   cursor: pointer;
   border-radius: 10px;
   margin-top: 6px;
-  margin-left: 200px;
+  /* margin-left: 200px; */
   /* padding: 5px; */
   position: sticky;
 }
@@ -260,4 +260,272 @@ button {
 }
 .search-input::placeholder{
   color: black;
+}
+.custom-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color:black;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+  margin-top: 5px;
+  border-bottom: 5px solid grey;
+
+}
+
+/* Left section (Logo + Title) */
+.custom-left-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.custom-logo {
+  height: 50px;
+  width: 50px;
+  margin-right: 10px;
+}
+
+.custom-dashboard-title {
+  font-size: 20px;
+  font-weight: bold;
+  font-family: Arial, Helvetica, sans-serif;
+  color: white;
+  margin: 0;
+}
+
+/* Right section (Search + Buttons) */
+.custom-right-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-right: 16px;
+}
+
+.custom-search-container {
+  width: 300px;
+  margin-right: 30px;
+
+}
+
+.custom-search-input {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  height: 20px;
+ 
+}
+
+.custom-nav-btn,
+.custom-fte-btn {
+  background-color: #ff7900;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-weight: bold;
+  cursor: pointer;
+  white-space: nowrap;
+  height: 45px;
+}
+
+.custom-icon-btn {
+  height: 30px;
+  width: 30px;
+  cursor: pointer;
+}
+
+.custom-logout-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.custom-home-icon-container {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+
+.tables-wrapper {
+  overflow-x: auto; /* horizontal scroll if needed */
+  overflow-y: auto; /* vertical scroll if content exceeds max-height */
+  
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  margin-bottom: 10px; /* space between table and pagination */
+  overflow-y: auto;
+overflow-x: auto;
+max-height: 60vh;
+
+}
+
+.tables-section {
+  display: flex;
+  flex-direction: column;
+  width: 120%;
+  max-width: 1300px; /* or your preferred max width */
+  margin: 0 auto;
+  padding: 10px;
+  
+}
+
+.tables thead {
+  background-color: #02080b;
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+
+ 
+
+/* Table Styles */
+
+.tables {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px; /* ensures table doesn't shrink too much */
+}
+
+
+.tables td {
+
+  padding: 8px;
+  font-size: 14px;
+  text-align: center;
+  border-bottom: 0.3px solid #ccc;
+  color: #000000;
+  border-right: 1px solid black;
+  height: 40px;
+  
+
+}
+.tables th{
+  padding: 8px;
+  font-size: 13px;
+  text-align: center;
+  border-bottom: 0.3px solid #ccc;
+  color: white;
+  height: 20px;
+}
+
+
+ 
+
+/* Project Titles */
+
+.tables td:nth-child(1) {
+
+  color: #FF7900; /* Using the same orange for project codes */
+
+  font-weight: bold;
+
+}
+
+
+.tables td {
+
+padding: 12px;
+
+font-size: 14px;
+
+text-align: center;
+
+color: #585858;
+
+border-bottom: 1px solid #444;
+
+transition: background-color 0.3s ease;
+
+}
+
+
+
+/* Keep Specific Columns White */
+
+.tables td:nth-child(1),  /* Project Code */
+
+.tables td:nth-child(2),  /* Expiration Date */
+
+.tables td:nth-child(3),  /* Allocated FTE */
+
+.tables td:nth-child(4) { /* Allocated Hours */
+
+background-color: #FFFFFF;
+
+color: #000000;
+
+font-weight: bold;
+
+}
+
+
+
+/* Alternate row colors */
+
+.tables tbody tr:nth-child(even) {
+
+background-color:#FFFFFF;
+
+}
+
+
+
+.tables tbody tr:hover {
+
+background-color: rgba(248, 247, 246, 0.954);
+
+transition: background-color 0.3s ease-in-out;
+
+}
+
+
+
+
+.tables input[type="number"] {
+
+
+
+font-size: 14px;
+
+text-align: center;
+border-color: #ff7900;
+
+
+background-color: #E7E0E0;
+
+color: #050505;
+height: 35px;
+width: 100px;
+
+} 
+
+
+@media (max-width: 768px) {
+
+  .tables {
+
+      font-size: 12px;
+
+  }
+
+ 
+
+  .tables th, .tables td {
+
+      padding: 10px;
+
+      font-size: 12px;
+
+  }
 }

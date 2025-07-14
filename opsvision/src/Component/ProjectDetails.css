@@ -28,13 +28,150 @@ html, body {
 
 }
 
+.det-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap; /* Wrap on small screens */
+  padding: 5px 5px;
+  background-color: transparent; /* or your preferred background */
+  margin-bottom: 20px;
+}
+
+/* Logo section */
+.det-logo-section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.det-logo {
+  height: 50px;
+  width: 50px;
+}
+
+/* Previous page button */
+.det-prev-page {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 3px;
+  width: 400px;
+  height: 38px;
+  background-color: #ff7900;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  margin-left: 3px;
+  transition: background-color 0.2s;
+}
+
+.det-prev-page:hover {
+  background-color: #e66b00;
+}
+
+.det-prev-text {
+  margin-left: 8px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+}
+
+/* Title styles */
+.det-title {
+  flex: 2;
+  text-align: center;
+  font-size: 22px;
+  font-weight: bold;
+  color: #fff;
+  flex-shrink: 1;
+}
+
+/* Home icon styles */
+.det-home-icon {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 5px 10px;
+  background-color: #ff7900;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  margin-left: 10px;
+  width: 70px;
+  height: 31px;
+  background-color: #ff7900;
+  color: white;
+  border: 1px solid black;
+  cursor: pointer;
+  margin-left: 550px;
+  
+  border-radius: 8px;
+}
+
+.det-home-icon:hover {
+  background-color: #e66b00;
+}
+
+.det-home-text {
+  margin-left: 10px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 550;
+  font-size: 15px;
+  text-align: center;
+}
+
+/* Logout button styles */
+.det-logout-btn {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 5px 10px;
+  background-color: #ff7900;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  margin-left: 10px;
+  width: 90px;
+  height: 43px;
+  background-color: #ff7900;
+  color: white;
+  border: 1px solid black;
+  padding-left: 20px;
+  cursor: pointer;
+}
+
+.det-logout-btn:hover {
+  background-color: #e66b00;
+}
+
+/* Responsive adjustments */
+@media(max-width: 768px) {
+  .det-header-row {
+    flex-direction: column;
+    align-items: center;
+  }
+  .det-prev-page,
+  .det-home-icon,
+  .det-logout-btn {
+    margin: 8px 0;
+  }
+  .det-title {
+    margin-top: 10px;
+  }
+}
+
+
  
 
 /* Top-level container */
 
-.containers {
+/* .containers {
 
   display: flex;
+  flex-direction: column;
 
   justify-content: space-between;
 
@@ -43,14 +180,14 @@ html, body {
   height: calc(100vh - 120px);
 
   width: 100vw;
+ */
+  
+  /* padding-left: 10px;
 
-  padding: 20px;
+  background-color: black !important; */
 
-  background-color: black !important;
 
-  margin-top: 80px;
 
-}
 
  .backa{
     height:40px;
@@ -184,12 +321,14 @@ html, body {
   margin-top: 0;
 
   flex: 1;
-
+  margin-left: 20px;
+  height:480px;
+/* 
   min-width: 650px;
 
   max-width: 90%;
 
-  max-height: 89%;
+  max-height: 89%; */
 
   padding: 1.5rem;
 
@@ -203,11 +342,12 @@ html, body {
 
   z-index: 5;
 
-  min-height: 200px;
+  min-height: 460px;
 
   overflow: hidden;
 
   display: flex;
+  width: 90%;
 
   flex-direction: column;
 
@@ -242,7 +382,7 @@ html, body {
 }
 
  
-
+/* 
 .total {
 
   margin-left: 500px;
@@ -285,8 +425,36 @@ html, body {
 
 }
 
- 
+  */
 
+  .project-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.3rem;
+    padding: 0 1rem;
+  }
+  
+  .project-code-left {
+    flex: 1;
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+  
+  .hours-info-right {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    flex: 3;
+  }
+  
+  .hours-info-right h3 {
+    margin: 0;
+    font-size: 1rem;
+  }
+  
 /* Image */
 
 .image-containers {
@@ -533,7 +701,7 @@ html, body {
 
   border-radius: 4px;
 
-  max-height: 400px; /* Add a fixed height or max-height */
+  max-height: 800px; /* Add a fixed height or max-height */
 
 }
 
@@ -557,7 +725,7 @@ html, body {
 
   background-color: #ff7900;
 
-  color: black;
+  color: white;
 
   z-index: 10;
 
@@ -743,23 +911,93 @@ input::placeholder {
   .home-iconsss:hover {
     transform: scale(1.1);
   }
-  .oranges-btn {
+
+.oranges-btn{
   height: 28px;
   width: 100px;
+  margin-top: 5px;
   margin-left: 500px;
   margin-top: -30px;
+}
+
+.detail-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color:black;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+  margin-top: 5px;
+}
+
+.detail-left-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.detail-logo {
+  height: 50px;
+  width: 50px;
+  margin-right: 50px;
+}
+
+.detail-dashboard-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.detail-right-section {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-right: 30px;
+}
+
+.detail-search-container {
+  max-width: 250px;
+}
+
+.detail-search-bar {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.detail-icon-btn {
+  height: 30px;
+  width: 30px;
   cursor: pointer;
-  background-color: #ff7900; /* base orange */
-  color: black;
+}
+
+.detail-logout-btn {
+  background: transparent;
   border: none;
-  border-radius: 4px;
-  transition: background-color 0.3s, transform 0.2s;
+  padding: 0;
+  cursor: pointer;
+  height: 40px;
 }
 
-.oranges-btn:hover {
-  background-color: #ffa84d; /* lighter orange on hover */
-  transform: scale(1.05); /* optional: slight zoom on hover */
+.detail-home-icon-container
+ {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  height: 40px;
 }
-
-
-
+.detail-back-icon-container{
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  height:30px;
+  width: 35px;
+  border: 2px solid #ff7900; 
+  background-color: #ff7000;
+}

@@ -2,13 +2,22 @@
 .landing-page {
   display: flex;
   height: 100vh;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family:Arial, Helvetica, sans-serif;
   background-color: #000;
   color: white;
 }
-
+.powerbi-container {
+  height: 100vh;
+  width: 100%;
+  border: 1px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 3px;
+}
+ 
+ 
 /* Sidebar styling */
-.sidebar {
+/* .sidebar {
   width: 240px;
   background-color: #000000;
   padding: 20px;
@@ -16,20 +25,76 @@
   flex-direction: column;
   justify-content: space-between;
   border-right: 2px solid #FF7900;
+} */
+ /* Sidebar bottom section */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100vh;
+  width: 200px;
+  padding: 20px;
+  justify-content: space-between;
+  border-right: 2px solid #FF7900;
 }
-
+ 
+.sidebar-bottom-icons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0;
+  gap: 1rem;
+  margin-left: 140px;
+  cursor: pointer;
+      margin-bottom: 50px;
+}
+ 
+.button-icon-btn {
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+}
+ 
+/* Logout button in top-right corner */
+.top-right-logout {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+ 
+ 
 .sidebar-title {
   color: #FF7900;
   font-size: 1.5rem;
   margin-bottom: 20px;
 }
-
+ 
+ 
+.detail-logout-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  height: 40px;
+}
+ 
+.detail-home-icon-container
+ {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  height: 40px;
+}
+ 
 .nav-menu {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-
+ 
 .nav-item {
   display: flex;
   align-items: center;
@@ -41,17 +106,17 @@
   background-color: #2a2a2a;
   margin-bottom: 12px;
 }
-
+ 
 .nav-item:hover {
   background-color: #333;
   transform: translateX(5px);
 }
-
+ 
 .nav-item.active {
   background-color: #FF7900;
   color: #000;
 }
-
+ 
 .logout-button {
   background-color: #FF7900;
   color: white;
@@ -62,11 +127,11 @@
   font-weight: bold;
   transition: background 0.3s;
 }
-
+ 
 .logout-button:hover {
   background-color: #e56e00;
 }
-
+ 
 /* Main content area */
 .main-content {
   flex: 1;
@@ -74,7 +139,7 @@
   overflow-y: auto;
   position: relative;
 }
-
+ 
 .top-right-profile {
   position: absolute;
   top: 20px;
@@ -87,32 +152,32 @@
   cursor: pointer;
   margin-top: 50px;
 }
-
+ 
 .profile-icon {
   margin-right: 0px;
   /* margin-top: 100px; */
 }
-
+ 
 .profile-name {
   font-weight: bold;
 }
-
+ 
 .welcome-title {
   font-size: 2rem;
   margin-bottom: 10px;
 }
-
+ 
 .welcome-subtext {
   font-size: 1.5rem;
   margin-bottom: 30px;
   color: #ccc;
   font-weight: 300;
 }
-
+ 
 .prime-options h2 {
   margin-bottom: 10px;
 }
-
+ 
 .prime-options button {
   margin-right: 15px;
   margin-bottom: 10px;
@@ -125,25 +190,27 @@
   cursor: pointer;
   transition: background 0.3s;
 }
-
+ 
 .prime-options button:hover {
   background-color: #e56e00;
 }
-
+ 
 .images {
   margin-top: 40px;
   text-align: center;
 }
-
+ 
 .landing-image {
   max-width: 100%;
   height: auto;
   border-radius: 8px;
 }
-
+ 
 .loading {
   color: white;
   font-size: 1.5rem;
   text-align: center;
   margin-top: 100px;
 }
+ 
+ 

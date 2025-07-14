@@ -6,6 +6,8 @@ import logo from "./images.png";
 import { useNavigate } from "react-router-dom";
 import homeIcon from "./home.png";
 import back from "./backs.png";
+import logoutIcon from './logout.png';
+import backIcon from './backs.png'; 
  
  
 export default function Delegate() {
@@ -28,6 +30,7 @@ export default function Delegate() {
  
  
   const staffId = localStorage.getItem("staffId");
+  
  
   useEffect(() => {
     if (projectId) {
@@ -104,21 +107,24 @@ export default function Delegate() {
     const employees = response.data;
  
     setAssignedEmployees(employees || []);
+    // setAssignedEmployees(response.data)
  
     const initialFte = {};
     const committedMap = {};
     let totalAllocated = 0;
  
-    const committedPromises = employees.map(async (emp) => {
-      const hours = parseFloat(emp.allocatedHours) || 0;
-      initialFte[emp.staffId] = hours;
-      totalAllocated += hours;
+    await Promise.all(
+        employees.map(async (emp) => {
+          const hours = parseFloat(emp.allocatedHours) || 0;
+          initialFte[emp.staffId] = hours;
+          totalAllocated += hours;
+  
+          const committed = await fetchCommittedHours(emp.staffId);
+          committedMap[emp.staffId] = committed;
+        })
+      );
  
-      const committed = await fetchCommittedHours(emp.staffId);
-      committedMap[emp.staffId] = committed;
-    });
- 
-    await Promise.all(committedPromises);
+    // await Promise.all(committedPromises);
  
     setFteHours(initialFte);
     setCommittedHoursMap(committedMap);
@@ -126,8 +132,10 @@ export default function Delegate() {
  
     const remaining = parseFloat(allocatedHours) - totalAllocated;
     setRemainingHours(remaining >= 0 ? remaining : 0);
+    return employees;
   } catch (err) {
     console.error("Error fetching FTEs:", err);
+    return [];
   }
 };
  
@@ -226,81 +234,85 @@ const handleSaveAllNewEmployees = async () => {
     }
   };
  
-  // const handleAllocateNewEmployee = async (employeeId) => {
-  //   try {
-  //     const allocated = parseFloat(fteHours[employeeId]);
-  //     if (!allocated || allocated <= 0) {
-  //       alert("Allocated hours must be greater than 0.");
-  //       return;
-  //     }
- 
-  //     // if (allocated > remainingHours) {
-  //     //   alert(`You only have ${remainingHours} hours remaining to allocate.`);
-  //     //   return;
-  //     // }
- 
-  //     const employee = newEmployees.find(emp => emp.staffId === employeeId);
-  //     if (!employee) {
-  //       alert("Employee not found in selection.");
-  //       return;
-  //     }
- 
-  //     const payload = {
-  //       projectId: parseInt(projectId),
-  //       primeCode,
-  //       staffId: employee.staffId,
-  //       allocatedHours: allocated,
-  //       delegatees: []
-  //     };
- 
-  //     await axios.post(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/allocate`, payload);
-  //     fetchProjectFTEs(projectId);
-  //   } catch (error) {
-  //     console.error("Error allocating hours:", error);
-  //     alert("Failed to allocate hours.");
-  //   }
-  // };
  
  
-  const handleUpdateHours = async (staffIdToUpdate) => {
+ const handleUpdateHours = async (staffIdToUpdate) => {
     try {
       const newAllocated = parseFloat(fteHours[staffIdToUpdate]);
+  
       if (isNaN(newAllocated) || newAllocated <= 0) {
         alert("Allocated hours must be a valid number greater than 0.");
+        const freshList = await fetchProjectFTEs(projectId);
+  
+        const freshEmp = freshList.find(emp => emp.staffId === staffIdToUpdate);
+        if (freshEmp) {
+          setFteHours(prev => ({
+            ...prev,
+            [staffIdToUpdate]: freshEmp.allocatedHours || 0,
+          }));
+        }
         return;
       }
- 
+  
       const currentEmp = assignedEmployees.find(emp => emp.staffId === staffIdToUpdate);
       const prevAllocated = parseFloat(currentEmp?.allocatedHours || 0);
       const delta = newAllocated - prevAllocated;
- 
+  
       if (delta > remainingHours) {
         alert(`You only have ${remainingHours} hours remaining. Cannot assign additional ${delta} hours.`);
+  
+        const freshList = await fetchProjectFTEs(projectId);
+        const freshEmp = freshList.find(emp => emp.staffId === staffIdToUpdate);
+        if (freshEmp) {
+          setFteHours(prev => ({
+            ...prev,
+            [staffIdToUpdate]: freshEmp.allocatedHours || 0,
+          }));
+        }
         return;
       }
- 
-      const loggedInStaffId = parseInt(localStorage.getItem("staffId")); // make sure this key is correct
- 
-    const payload = {
-      projectId: parseInt(projectId),
-      primeCode,
-      staffId: loggedInStaffId,
-    delegatees: [
-        {
-          staffId: staffIdToUpdate,
-          staffName: currentEmp?.staffName || "Unknown",
-          allocatedHours: newAllocated
-        }
-      ]
-    };
- 
-      await axios.put(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/update`, payload);
-      fetchProjectFTEs(projectId);
+  
+      const loggedInStaffId = parseInt(localStorage.getItem("staffId"));
+  
+      const payload = {
+        projectId: parseInt(projectId),
+        primeCode,
+        staffId: loggedInStaffId,
+        delegatees: [
+          {
+            staffId: staffIdToUpdate,
+            staffName: currentEmp?.staffName || "Unknown",
+            allocatedHours: newAllocated,
+          }
+        ]
+      };
+  
+      await axios.put("https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/update", payload);
+  
+      const freshList = await fetchProjectFTEs(projectId);
+      const freshEmp = freshList.find(emp => emp.staffId === staffIdToUpdate);
+      if (freshEmp) {
+        setFteHours(prev => ({
+          ...prev,
+          [staffIdToUpdate]: freshEmp.allocatedHours || 0,
+        }));
+      }
+  
     } catch (error) {
       console.error("Error updating hours:", error);
       alert("Failed to update hours.");
+  
+      const freshList = await fetchProjectFTEs(projectId);
+      const freshEmp = freshList.find(emp => emp.staffId === staffIdToUpdate);
+      if (freshEmp) {
+        setFteHours(prev => ({
+          ...prev,
+          [staffIdToUpdate]: freshEmp.allocatedHours || 0,
+        }));
+      }
     }
   };
+
  const handleUpdateAllAssignedEmployees = async () => {
   try {
     let totalToAssign = 0;
@@ -342,9 +354,11 @@ const handleSaveAllNewEmployees = async () => {
     // Perform all updates
     for (const payload of payloadList) {
       await axios.put(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/update`, payload);
+      await fetchProjectFTEs(projectId);
     }
 
-    fetchProjectFTEs(projectId);
+
+    // fetchProjectFTEs(projectId);
   } catch (error) {
     console.error("Error updating all employees:", error);
     alert("Failed to update one or more employees.");
@@ -370,43 +384,53 @@ const handleSaveAllNewEmployees = async () => {
       console.error("Error deleting FTE:", error);
     }
   };
+  
+
+ const remainingCommittedHours = parseFloat(allocatedHours) - totalCommittedHours;
   return (
     <div className="delegate-wrapper">
-      <div className="delegate-header">
-        <img src={logo} alt="Logo" className="delegate-logo" />
-       
-  {/* <div className="back" title="back" onClick={() => navigate("/manager")}>
-  <h className="bck">back</h> */}
- 
- 
-  {/* <img src={back}  alt="Previous Page" className="back-icon" /> */}
-  {/* </div> */}
-        <h className="assign">Assign to Team</h>
-        <div className="bac" title="Previous Page" onClick={() => navigate("/manager")}>
-  {/* <img src={homeIcon} alt="Home" className="home-iconsss" /> */}
-  <h className="bck">Previous Page</h>
+     <div className="detail-dashboard-header">
+  {/* Left Side: Logo + Title */}
+  <div className="detail-left-section">
+    <img src={logo} alt="Orange Business Logo" className="detail-logo" />
+    <div
+      className="detail-back-icon-container"
+      title="Back"
+      onClick={() => navigate("/manager")}
+    >
+      <img src={backIcon} alt="Back" className="detail-icon-btn" />
+    </div>
+    <h1 className="detail-dashboard-title">
+      Assign To Team
+    </h1>
   </div>
-        <div className="home-icon-containersss" title="Go to homepage" onClick={() => {
+
+  <div className="detail-right-section">
+  
+    <div
+      className="detail-home-icon-container"
+      title="Go to Homepage"
+      onClick={() => {
         localStorage.setItem("selectedModule", "primeAllocation");
-        navigate("/landing");}}>
-  {/* <img src={homeIcon} alt="Home" className="home-iconsss" /> */}
-  <h className="hms">Home</h>
+        navigate("/landing");
+      }}
+    >
+      <img src={homeIcon} alt="Home" className="detail-icon-btn" />
+    </div>
+
+    <button onClick={handleLogout} title="Logout" className="detail-logout-btn">
+      <img src={logoutIcon} alt="Logout" className="detail-icon-btn" />
+    </button>
   </div>
-        <button className="logout-button" title="Logout" onClick={handleLogout}>
-          Logout
-        </button>
-       
-      </div>
+</div>
  
-      <div className="delegate-project-info">
-        <p><strong>PrimeCode:</strong>{primeCode}</p>
-        {/* <p><strong>Project Name:</strong> {projectName}</p> */}
-        <p><strong>Total Allocated Hours:</strong>{allocatedHours}</p>
-        {/* <p><strong>Remaining Hours to Assign:</strong>{remainingHours}</p> */}
-        <p><strong>Remaining Hours</strong>{remainingHours}</p>
- 
-        <p><strong>Total Committed Hours:</strong>{totalCommittedHours}</p>
-      </div>
+     <div className="delegate-project-info">
+  <p style={{ color: "#ff7900", fontWeight: "bold" }}>{primeCode}</p>
+  <p>Total Hours: {allocatedHours}</p>
+  <p style={{ color: "#ff7900" }}>Remaining Allocations: {remainingHours}</p>
+  <p>Total Commits: {totalCommittedHours}</p>
+  <p style={{ color: "#ff7900" }}>Remaining Commits: {remainingCommittedHours}</p>
+</div>
  
       {/* Search Bar */}
       <div className="delegate-search-section">
@@ -432,19 +456,18 @@ const handleSaveAllNewEmployees = async () => {
           </div>
         )}
       </div>
+     <div className="action-buttons">
       {newEmployees.length > 0 && (
-  <div className="save-all-wrapper" style={{ marginTop: "1rem", textAlign: "right" }}>
-    <button className="save-all-button" onClick={handleSaveAllNewEmployees}>
-      Save All
-    </button>
-  </div>
-  
-)}
-{assignedEmployees.length > 0 && (
+        <button className="save-all-button" onClick={handleSaveAllNewEmployees}>
+          Save All
+        </button>
+      )}
+      {assignedEmployees.length > 0 && (
         <button className="update-all-button" onClick={handleUpdateAllAssignedEmployees}>
           Update All
         </button>
       )}
+    </div>
 
  
       {/* FTE Table */}

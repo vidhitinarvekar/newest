@@ -8,8 +8,9 @@ import secureAxios from './utils/secureAxios';
 import withNavigation from './withNavigation';
 import homeIcon from "./home.png";
 import { debounce } from 'lodash';
-import Loader from './Loader'; 
+import Loader from './Loader';
 import TinyLoader from './TinyLoader';
+import logoutIcon from './logout.png';
 
 
 class ProjectTrackingDashboard extends Component {
@@ -40,26 +41,26 @@ class ProjectTrackingDashboard extends Component {
         this.state = {
             ...this.state,
             searchQuery: "",
-            isProjectOwner: false 
+            isProjectOwner: false
         };
-        
 
- 
+
+
 
         this.role = localStorage.getItem("role");
 
     }
 
- 
 
-   async componentDidMount() {
+
+    async componentDidMount() {
         const isProjectOwner = localStorage.getItem("isProjectOwner") === "true";
-    this.setState({ isProjectOwner });
+        this.setState({ isProjectOwner });
 
         await this.fetchProjects();
     }
 
- 
+
 
     fetchProjects = async () => {
 
@@ -67,7 +68,7 @@ class ProjectTrackingDashboard extends Component {
 
             this.setState({ isLoading: true });
 
- 
+
 
             const staffId = localStorage.getItem('staffId');
 
@@ -81,7 +82,7 @@ class ProjectTrackingDashboard extends Component {
 
             }
 
- 
+
 
             console.log("Fetching self-assigned projects...");
 
@@ -89,7 +90,7 @@ class ProjectTrackingDashboard extends Component {
 
             const projectsData = response.data;
 
- 
+
 
             const committedHoursPromises = projectsData.map(proj =>
 
@@ -107,11 +108,11 @@ class ProjectTrackingDashboard extends Component {
 
             );
 
- 
+
 
             const committedHours = await Promise.all(committedHoursPromises);
 
- 
+
 
             const projectsWithHours = projectsData.map((proj, index) => {
 
@@ -141,11 +142,11 @@ class ProjectTrackingDashboard extends Component {
 
             });
 
- 
+
 
             this.setState({ projects: projectsWithHours, isLoading: false });
 
- 
+
 
         } catch (error) {
 
@@ -159,7 +160,7 @@ class ProjectTrackingDashboard extends Component {
 
     };
 
- 
+
 
     handleHoursChange = debounce((index, hours) => {
 
@@ -177,13 +178,13 @@ class ProjectTrackingDashboard extends Component {
 
     }, 300);
 
- 
+
 
     logout = () => {
 
         localStorage.clear();
-          sessionStorage.removeItem("projectPage");
-    sessionStorage.removeItem("projectSearch");
+        sessionStorage.removeItem("projectPage");
+        sessionStorage.removeItem("projectSearch");
 
         window.location.reload();
 
@@ -198,87 +199,87 @@ class ProjectTrackingDashboard extends Component {
         this.props.navigate('/manager');
     };
 
- 
 
-   updateCommittedHours = async (index) => {
-    this.setState({ savingIndex: index });
 
-    const project = this.state.projects[index];
-    if (!project) return;
+    updateCommittedHours = async (index) => {
+        this.setState({ savingIndex: index });
 
-    let committedHours = parseFloat(project.inputHours || 0);
-    if (isNaN(committedHours) || committedHours < 0) {
-        alert("Committed hours cannot be negative.");
-        this.setState({ savingIndex: null });
-        return;
-    }
+        const project = this.state.projects[index];
+        if (!project) return;
 
-    const totalCommitted = project.lastCommittedHours + committedHours;
-    if (totalCommitted > project.allocatedHours) {
-        alert(`Total committed hours (${totalCommitted}) exceed allocated hours (${project.allocatedHours}).`);
-        this.setState({ savingIndex: null });
-        return;
-    }
+        let committedHours = parseFloat(project.inputHours || 0);
+        if (isNaN(committedHours) || committedHours < 0) {
+            alert("Committed hours cannot be negative.");
+            this.setState({ savingIndex: null });
+            return;
+        }
 
-    const staffId = localStorage.getItem('staffId');
-    if (!staffId) {
-        alert("Staff ID not found. Please log in again.");
-        this.setState({ savingIndex: null });
-        return;
-    }
+        const totalCommitted = project.lastCommittedHours + committedHours;
+        if (totalCommitted > project.allocatedHours) {
+            alert(`Total committed hours (${totalCommitted}) exceed allocated hours (${project.allocatedHours}).`);
+            this.setState({ savingIndex: null });
+            return;
+        }
 
-    const isFirstEntry = project.committedHours === 0;
-    const postRequestBody = {
-        committedHoursDto: {
+        const staffId = localStorage.getItem('staffId');
+        if (!staffId) {
+            alert("Staff ID not found. Please log in again.");
+            this.setState({ savingIndex: null });
+            return;
+        }
+
+        const isFirstEntry = project.committedHours === 0;
+        const postRequestBody = {
+            committedHoursDto: {
+                projectId: project.projectId,
+                staffId: Number(staffId),
+                committedHours: committedHours,
+                completedHours: 0
+            }
+        };
+        const putRequestBody = {
             projectId: project.projectId,
             staffId: Number(staffId),
             committedHours: committedHours,
-            completedHours: 0
+            completedHours: 0,
+            remarks: ""
+        };
+
+        try {
+            const response = await secureAxios[isFirstEntry ? 'post' : 'put'](
+                "/api/ProjectFteManagement/commit-hours",
+                isFirstEntry ? postRequestBody : putRequestBody
+            );
+
+            if (response.status === 200) {
+                // ✅ Just update that one project in the list
+                this.setState(prevState => {
+                    const updatedProjects = [...prevState.projects];
+                    const updatedProject = {
+                        ...updatedProjects[index],
+                        committedHours: project.committedHours + committedHours,
+                        lastCommittedHours: project.lastCommittedHours + committedHours,
+                        remainingHrs: Math.max(0, project.allocatedHours - (project.lastCommittedHours + committedHours)),
+                        inputHours: 0
+                    };
+                    updatedProjects[index] = updatedProject;
+                    return { projects: updatedProjects };
+                });
+
+                alert("Committed hours saved successfully!");
+            } else {
+                alert("Failed to save committed hours.");
+            }
+        } catch (error) {
+            alert("Error saving committed hours: " + (error.response ? JSON.stringify(error.response.data) : error.message));
+        } finally {
+            this.setState({ savingIndex: null });
         }
     };
-    const putRequestBody = {
-        projectId: project.projectId,
-        staffId: Number(staffId),
-        committedHours: committedHours,
-        completedHours: 0,
-        remarks: ""
-    };
-
-    try {
-        const response = await secureAxios[isFirstEntry ? 'post' : 'put'](
-            "/api/ProjectFteManagement/commit-hours",
-            isFirstEntry ? postRequestBody : putRequestBody
-        );
-
-        if (response.status === 200) {
-            // ✅ Just update that one project in the list
-            this.setState(prevState => {
-                const updatedProjects = [...prevState.projects];
-                const updatedProject = {
-                    ...updatedProjects[index],
-                    committedHours: project.committedHours + committedHours,
-                    lastCommittedHours: project.lastCommittedHours + committedHours,
-                    remainingHrs: Math.max(0, project.allocatedHours - (project.lastCommittedHours + committedHours)),
-                    inputHours: 0
-                };
-                updatedProjects[index] = updatedProject;
-                return { projects: updatedProjects };
-            });
-
-            alert("Committed hours saved successfully!");
-        } else {
-            alert("Failed to save committed hours.");
-        }
-    } catch (error) {
-        alert("Error saving committed hours: " + (error.response ? JSON.stringify(error.response.data) : error.message));
-    } finally {
-        this.setState({ savingIndex: null });
-    }
-};
 
 
- 
- 
+
+
     handleAssign = (project) => {
 
         this.props.navigate('/delegate', {
@@ -297,191 +298,186 @@ class ProjectTrackingDashboard extends Component {
 
     };
 
- 
+
 
     render() {
-  const { projects, editingIndex, isLoading, savingIndex } = this.state;
+        const { projects, editingIndex, isLoading, savingIndex } = this.state;
 
-  if (isLoading) {
-    return <Loader />;
-  }
+        if (isLoading) {
+            return <Loader />;
+        }
 
-  return (
-    <div className="dashboard-container">
+        return (
+            <div className="dashboard-container">
+                <div className="custom-dashboard-header">
+                    {/* Left Side: Logo + Title */}
+                    <div className="custom-left-section">
+                        <img src={logo} alt="Orange Business Logo" className="custom-logo" />
+                        <h1 className="custom-dashboard-title">
+                            Self-Assigned Tasks
+                        </h1>
+                    </div>
 
+                    {/* Right Side: Search + Buttons */}
+                    <div className="custom-right-section">
+                        <div className="custom-search-container">
+                            <input
+                                type="text"
+                                placeholder="Search by Assigned By or PrimeCode"
+                                value={this.state.searchQuery}
+                                onChange={(e) => this.setState({ searchQuery: e.target.value })}
+                                className="custom-search-input"
+                            />
+                        </div>
 
-                <div className="header-containerr">
+                        {this.role === "Manager" && (
+                            <button onClick={this.team} title="Team Assigned" className="custom-nav-btn">
+                                MyTeam
+                            </button>
+                        )}
 
-                    <img src={logo} alt="Orange Business Logo" className="logo" loading="lazy" />
+                        {this.state.isProjectOwner && (
+                            <button onClick={this.ftes} title="FTE Allocation" className="custom-fte-btn">
+                                FTE Allocation
+                            </button>
+                        )}
 
-                    <h1 className="namme">Self-Assigned Tasks</h1>
+                        <div
+                            className="custom-home-icon-container"
+                            title="Go to Homepage"
+                            onClick={() => {
+                                localStorage.setItem("selectedModule", "primeAllocation");
+                                this.props.navigate("/landing");
+                            }}
+                        >
+                            <img src={homeIcon} alt="Home" className="custom-icon-btn" />
+                        </div>
 
-                    <button onClick={this.logout} title="Logout" className="logout-button">Logout</button>
-                    {this.role === "Manager" && (
-  <button onClick={this.team} title="Self Assigned" className="navs">
-    <span style={{ color: "white", fontWeight: "bold" }}>Team</span>
-  </button>
-  
-)}
-{this.state.isProjectOwner && (
-  <button onClick={this.ftes} title="FTE Allocation" className="fte">
-    <span style={{ color: "white", fontWeight: "bold" }}>FTE Allocation</span>
-  </button>
-)}
-
+                        <button onClick={this.logout} title="Logout" className="custom-logout-btn">
+                            <img src={logoutIcon} alt="Logout" className="custom-icon-btn" />
+                        </button>
+                    </div>
                 </div>
 
-                <div className="home-icon-containerss" title="Go to Homepage" onClick={() => {
-    localStorage.setItem("selectedModule", "primeAllocation"); // ✅ Set the module
-    this.props.navigate("/landing");
-  }}
->
+                <div className="tables-section">
+                    <div className="tables-wrapper">
+                        <table className="tables tables-bordered tables-striped">
+                            <thead className="theads-light">
+                                <tr>
+                                    <th>Assigned By</th>
 
-                    <h className="hm">Home</h>
+                                    <th>PrimeCode</th>
 
-                </div>
-                <div className="search-container">
-  <input
-    type="text"
-    placeholder="Search by Assigned By or PrimeCode"
-    value={this.state.searchQuery}
-    onChange={(e) => this.setState({ searchQuery: e.target.value })}
-    className="search-input"
-  />
-</div>
+                                    <th>Allocated Hours</th>
 
- 
+                                    <th>Commit Hours</th>
+                                    <th>Your Committed Hours</th>
 
-                <div className="content-container">
+                                    <th>Remaining Hours</th>
 
-                    <div className="table-container">
+                                    <th>Actions</th>
 
-                        {/* {isLoading ? (
+                                </tr>
 
-                            <div className="loading">Loading your projects...</div>
+                            </thead>
 
-                        ) : ( */}
+                            <tbody>
 
-                            <table className="project-table">
+                                {projects.filter((project) => {
+                                    const query = this.state.searchQuery.toLowerCase();
+                                    return (
+                                        (project.delegatedByName || "").toLowerCase().includes(query) ||
+                                        (project.primeCode || "").toLowerCase().includes(query)
+                                    );
+                                }).map((project, index) => (
 
-                                <thead>
+                                    <tr key={project.projectId}>
 
-                                    <tr>
+                                        <td>{project.delegatedByName}</td>
 
-                                        <th>Assigned By</th>
+                                        <td>{project.primeCode}</td>
 
-                                        <th>PrimeCode</th>
+                                        <td>{project.allocatedHours}</td>
 
-                                        <th>Allocated Hours</th>
+                                        <td>
 
-                                        <th>Commit Hours</th>
-                                        <th>Your Committed Hours</th>
+                                            {editingIndex === index ? (
 
-                                        <th>Remaining Hours</th>
+                                                <input
 
-                                        <th>Actions</th>
+                                                    type="number"
+
+                                                    max={project.allocatedHours}
+
+                                                    min="0"
+
+                                                    value={project.inputHours}
+
+                                                    onChange={(e) => this.handleHoursChange(index, e.target.value)}
+
+                                                    onBlur={() => this.setState({ editingIndex: null })}
+
+                                                    autoFocus
+
+                                                />
+
+                                            ) : (
+
+                                                <div
+
+                                                    className="editable-box"
+
+                                                    onClick={() => this.setState({ editingIndex: index })}
+
+                                                >
+
+                                                    {0}
+
+                                                </div>
+
+                                            )}
+
+                                        </td>
+                                        <td style={{ color: '#ff7900', fontWeight: '700' }}>{project.lastCommittedHours}</td>
+
+                                        <td>{project.remainingHrs}</td>
+
+                                        <td>
+
+                                            <button
+                                                onClick={() => this.updateCommittedHours(index)}
+                                                disabled={savingIndex === index}
+                                            >
+                                                {savingIndex === index ? (
+                                                    <TinyLoader />
+                                                ) : (
+                                                    'Update'
+                                                )}
+                                            </button>
+
+
+
+                                        </td>
 
                                     </tr>
 
-                                </thead>
+                                ))}
 
-                                <tbody>
+                            </tbody>
 
-                                    {projects.filter((project) => {
-    const query = this.state.searchQuery.toLowerCase();
-    return (
-      (project.delegatedByName || "").toLowerCase().includes(query) ||
-      (project.primeCode || "").toLowerCase().includes(query)
-    );
-  }).map((project, index) => (
-
-                                        <tr key={project.projectId}>
-
-                                            <td>{project.delegatedByName}</td>
-
-                                            <td>{project.primeCode}</td>
-
-                                            <td>{project.allocatedHours}</td>
-
-                                            <td>
-
-                                                {editingIndex === index ? (
-
-                                                    <input
-
-                                                        type="number"
-
-                                                        max={project.allocatedHours}
-
-                                                        min="0"
-
-                                                        value={project.inputHours}
-
-                                                        onChange={(e) => this.handleHoursChange(index, e.target.value)}
-
-                                                        onBlur={() => this.setState({ editingIndex: null })}
-
-                                                        autoFocus
-
-                                                    />
-
-                                                ) : (
-
-                                                    <div
-
-                                                        className="editable-box"
-
-                                                        onClick={() => this.setState({ editingIndex: index })}
-
-                                                    >
-
-                                                        {0}
-
-                                                    </div>
-
-                                                )}
-
-                                            </td>
-                                            <td style={{ color: '#ff7900',fontWeight:'700' }}>{project.lastCommittedHours}</td>
-
-                                            <td>{project.remainingHrs}</td>
-
-                                            <td>
-
-                                                <button
-    onClick={() => this.updateCommittedHours(index)}
-    disabled={savingIndex === index}
-    >
-    {savingIndex === index ? (
-        <TinyLoader />
-    ) : (
-        'Update'
-    )}
-    </button>
+                        </table>
 
 
-
-                                            </td>
-
-                                        </tr>
-
-                                    ))}
-
-                                </tbody>
-
-                            </table>
-
-                        
 
                     </div>
 
- 
 
-                    <div className="illustration-container">
+
+                    {/* <div className="illustration-container">
 
                         <img src={illustration} alt="Illustration" className="illustration-img" loading="lazy" />
 
-                    </div>
+                    </div> */}
 
                 </div>
 
@@ -493,6 +489,6 @@ class ProjectTrackingDashboard extends Component {
 
 }
 
- 
+
 
 export default withNavigation(ProjectTrackingDashboard);

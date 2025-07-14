@@ -4,7 +4,9 @@ import axios from "axios";
 import { deleteProjectFte } from "../Services/api";
 import "./ProjectDetails.css";
 import logo from "./images.png";
-import homeIcon from "./home.png";
+import backIcon from './backs.png';    
+import homeIcon from './home.png';
+import logoutIcon from './logout.png';
 import back from "./backs.png";
 import { useLocation } from 'react-router-dom';
 
@@ -30,7 +32,13 @@ export default function ProjectDetails() {
   const [delegatedHours, setDelegatedHours] = useState({});
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [committedHours, setCommittedHours] = useState({});
+  const [remarksOptions, setRemarksOptions] = useState([]);
   const location = useLocation();
+  const [fteRemarks, setFteRemarks] = useState({});
+  const initialAllocationIds = {}; 
+  const [fteAllocationIds, setFteAllocationIds] = useState({});
+
+
   const fromPage = location.state?.fromPage || 1;
 const fetchAssignedFTEs = async () => {
   if (!projectId) return;
@@ -38,7 +46,12 @@ const fetchAssignedFTEs = async () => {
   try {
     // Initiate both API calls concurrently
     const [assignedFTEsResponse, allProjectsResponse] = await Promise.all([
-      axios.get(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/${projectId}`),
+      // axios.get(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/${projectId}`),
+      axios.get('https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/fte-by-owner', {
+    params: {
+      projectId: projectId,
+    },
+  }),
       axios.get("https://opsvisionbe.integrator-orange.com/api/ProjectFte/all")
     ]);
 
@@ -55,10 +68,16 @@ const fetchAssignedFTEs = async () => {
     setTotalHours((remainingHours || 0) + allocatedSum);
 
     const initialHours = {};
+        const initialRemarks = {};
     (assignedEmployees || []).forEach((fte) => {
       initialHours[fte.staffId] = fte.allocatedHours;
+      initialRemarks[fte.staffId] = fte.remarks || "";  //  Extract remarks from each FTE
+       initialAllocationIds[fte.staffId] = fte.fteAllocationId; //  Store allocation ID
+
     });
     setFteHours(initialHours);
+     setFteRemarks(initialRemarks);
+     setFteAllocationIds(initialAllocationIds);
     setDelegates({});
 
     await fetchAllCommittedHours(assignedEmployees);
@@ -125,6 +144,18 @@ const fetchAssignedFTEs = async () => {
 
     fetchEmployees();
   }, [searchQuery]);
+  useEffect(() => {
+  const fetchRemarksOptions = async () => {
+    try {
+      const res = await axios.get("https://opsvisionbe.integrator-orange.com/api/ProjectManagement/fte/remarks");
+      setRemarksOptions(res.data);
+    } catch (error) {
+      console.error("Error fetching remarks options:", error);
+    }
+  };
+
+  fetchRemarksOptions();
+}, []);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -225,6 +256,9 @@ const fetchAssignedFTEs = async () => {
         staffId: isManager ? 0 : staffId,
         allocatedHours: isManager ? 0 : allocatedHours,
         delegatees: delegateeList,
+         remarks: fteRemarks[staffId] || ""
+
+
       };
 
       console.log("📤 Sending payload to API:", payload);
@@ -257,45 +291,77 @@ const fetchAssignedFTEs = async () => {
 
   };
 
+const handleUpdateFTE = async (staffId) => {
+  try {
+    const allocatedHours = Number(fteHours[staffId]);
 
-  const handleUpdateFTE = async (staffId) => {
-    try {
-      const allocatedHours = Number(fteHours[staffId]);
+    const delegateeList = (delegates[staffId] || [])
+      .filter((delegate) => Number(delegatedHours[staffId]?.[delegate.staffId]) > 0)
+      .map((delegate) => ({
+        staffId: delegate.staffId,
+        staffName: `${delegate.firstName} ${delegate.lastName}`,
+        allocatedHours: Number(delegatedHours[staffId]?.[delegate.staffId]),
+      }));
 
-      const delegateeList = (delegates[staffId] || [])
-        .filter((delegate) => Number(delegatedHours[staffId]?.[delegate.staffId]) > 0)
-        .map((delegate) => ({
-          staffId: delegate.staffId,
-          staffName: `${delegate.firstName} ${delegate.lastName}`,
-          allocatedHours: Number(delegatedHours[staffId]?.[delegate.staffId]),
+    if (!isManager && (!allocatedHours || allocatedHours <= 0)) {
+      alert("Allocated hours must be greater than 0.");
+
+      // Reset the value for this staff from fresh data
+      await fetchAssignedFTEs();
+      const freshFte = allocatedFTEs.find(fte => fte.staffId === staffId);
+      if (freshFte) {
+        setFteHours((prev) => ({
+          ...prev,
+          [staffId]: freshFte.allocatedHours || 0,
         }));
-
-      if (!isManager && (!allocatedHours || allocatedHours <= 0))
-        return alert("Allocated hours must be greater than 0.");
-
-      if (!isManager && allocatedHours > calculateCurrentRemainingHours(staffId)) {
-        return alert("Not enough remaining hours.");
       }
-
-
-      const payload = {
-        projectId: Number(projectId),
-        primeCode,
-        staffId: isManager ? 0 : staffId,
-        allocatedHours: isManager ? 0 : allocatedHours,
-        delegatees: delegateeList,
-      };
-
-      await axios.put("https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/update", payload);
-      fetchAssignedFTEs();
-    } catch (error) {
-      console.error("Error updating FTE:", error);
-      alert("Failed to update FTE.");
-
-      
+      return;
     }
-  };
-   
+
+    if (!isManager && allocatedHours > calculateCurrentRemainingHours(staffId)) {
+      alert("Not enough remaining hours.");
+
+      // Fetch fresh FTE data and reset the allocated hours for this staff
+      await fetchAssignedFTEs();
+      const freshFte = allocatedFTEs.find(fte => fte.staffId === staffId);
+      if (freshFte) {
+        setFteHours((prev) => ({
+          ...prev,
+          [staffId]: freshFte.allocatedHours || 0,
+        }));
+      }
+      return;
+    }
+
+    const payload = {
+      projectId: Number(projectId),
+      primeCode,
+      staffId: isManager ? 0 : staffId,
+      allocatedHours: isManager ? 0 : allocatedHours,
+      delegatees: delegateeList,
+      remarks: fteRemarks[staffId] || "",            
+  fteAllocationId: fteAllocationIds[staffId], 
+    };
+
+    await axios.put("https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/update", payload);
+
+    // Refresh assigned FTEs after successful update
+    await fetchAssignedFTEs();
+  } catch (error) {
+    console.error("Error updating FTE:", error);
+    alert("Failed to update FTE.");
+
+    // Fetch fresh data and reset state on error (no page reload)
+    await fetchAssignedFTEs();
+    const freshFte = allocatedFTEs.find(fte => fte.staffId === staffId);
+    if (freshFte) {
+      setFteHours((prev) => ({
+        ...prev,
+        [staffId]: freshFte.allocatedHours || 0,
+      }));
+    }
+  }
+};
   const handleSaveAllFTEs = async () => {
      console.log("Update All button clicked");
     try {
@@ -337,6 +403,8 @@ const fetchAssignedFTEs = async () => {
           staffId: isManager ? 0 : staffId,
           allocatedHours: isManager ? 0 : allocated,
           delegatees: delegateeList,
+          remarks: fteRemarks[staffId] || "",            
+  
         });
       }
   
@@ -396,6 +464,8 @@ const fetchAssignedFTEs = async () => {
           primeCode,
           staffId: isManager ? 0 : staffId,
           allocatedHours: isManager ? 0 : allocatedHours,
+            remarks: fteRemarks[staffId] || "",            
+  fteAllocationId: fteAllocationIds[staffId], 
           delegatees: delegateeList,
         };
 
@@ -469,44 +539,63 @@ const fetchAssignedFTEs = async () => {
   };
 
   const totalCommittedHours = Object.values(committedHours).reduce((sum, hours) => sum + hours, 0);
+  const assignedToEmployees = totalHours - calculateCurrentRemainingHours();
+  const remainingCommittedHours = assignedToEmployees - totalCommittedHours;
 
   return (
 
     <div className="containers">
 
 
-      <div className="logo-containers">
-        <img src={logo} alt="Orange Business Logo" className="logo" />
-        <h1 className="naames">Allocate Hours</h1>
-        
-        <div className="backa" title="back" style={{ marginRight: '8px' }} onClick={() => navigate(`/project-table?page=${fromPage}`)}
->
-          {/* <img src={back} alt="Previous Page" className="back-icons" /> */}
+      <div className="detail-dashboard-header">
+  {/* Left Side: Logo + Title */}
+  <div className="detail-left-section">
+    <img src={logo} alt="Orange Business Logo" className="detail-logo" />
+    <div
+      className="detail-back-icon-container"
+      title="Back to Project Table"
+      onClick={() => navigate(`/project-table?page=${fromPage}`)}
+    >
+      <img src={backIcon} alt="Back" className="detail-icon-btn" />
+    </div>
+    <h1 className="detail-dashboard-title">
+      Allocate Hours
+    </h1>
+  </div>
 
-          <h3 className="previous">Previous Page</h3>
-        </div>
-        {/* <img src={logo} alt="Orange Business Logo" className="logo" /> */}
-      </div>
+  <div className="detail-right-section">
+  
+    <div
+      className="detail-home-icon-container"
+      title="Go to Homepage"
+      onClick={() => {
+        localStorage.setItem("selectedModule", "primeAllocation");
+        navigate("/landing");
+      }}
+    >
+      <img src={homeIcon} alt="Home" className="detail-icon-btn" />
+    </div>
 
-      <button onClick={handleLogout} title="Logout" className="logout-button">
-        Logout
-      </button>
-
-      <div className="home-icon-containersss" title="Go to Homepage" onClick={() => navigate("/landing")}>
-        {/* <img src={homeIcon} alt="Home" className="home-iconsss" /> */}
-        <h4 className="house">Home </h4>
-      </div>
-
+    <button onClick={handleLogout} title="Logout" className="detail-logout-btn">
+      <img src={logoutIcon} alt="Logout" className="detail-icon-btn" />
+    </button>
+  </div>
+</div>
       <div className="form-containers">
         <div className="header-section">
-          <div className="project-info">
-            <h2 className="project-code">PrimeCode: {primeCode}</h2>
-            <div className="hours-info">
-              <h3 className="total">Total Hours: {totalHours}</h3>
-              <h3 className="rem">Remaining Hours: {calculateCurrentRemainingHours()}</h3>
-              <h3 className="comm">Total committed: {totalCommittedHours}</h3>
-            </div>
-          </div>
+        <div className="project-info-row">
+  <h2 className="project-code-left">{primeCode}</h2>
+
+  <div className="hours-info-right">
+    <h3 className="total">Total: {totalHours}</h3>
+    <h3 className="rem">Remaining Allocations: {calculateCurrentRemainingHours()}</h3>
+    <h3 className="comm">Total committed: {totalCommittedHours}</h3>
+    <h3 className="rem" style={{ color: "#f7900" }}>
+      Remaining Commits: {remainingCommittedHours}
+    </h3>
+  </div>
+</div>
+
         </div>
 
         {/* Search Section */}
@@ -555,6 +644,7 @@ const fetchAssignedFTEs = async () => {
                 <th>FTE Name</th>
                 {/* <th>Staff ID</th> */}
                 <th>Allocated Hours</th>
+                <th>Task</th>
                 <th>Committed Hours</th>
                 <th>Actions</th>
               </tr>
@@ -576,6 +666,27 @@ const fetchAssignedFTEs = async () => {
                         }}
                       />
                     </td>
+                    <td>
+ <select
+  value={fteRemarks[fte.staffId] || ""}
+  onChange={(e) => {
+    const value = e.target.value;
+    setFteRemarks((prev) => ({
+      ...prev,
+      [fte.staffId]: value,
+    }));
+  }}
+>
+  <option value="">Select a Task</option>
+  {remarksOptions.map((option, index) => (
+    <option key={index} value={option}>
+      {option}
+    </option>
+  ))}
+</select>
+
+</td>
+
                     <td>{committedHours[fte.staffId] || 0}</td>
                     <td className="table-actions">
                       {newFTEs.some((n) => n.staffId === fte.staffId) ? (

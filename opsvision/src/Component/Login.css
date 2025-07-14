@@ -65,7 +65,7 @@ body {
     text-align: center;
     transition: transform 0.3s ease;
        width: 500px !important;
-    height: 300px;
+    height: 320px;
     margin-left: 140px;
     color: #000; /* Make text inside form black */
 }

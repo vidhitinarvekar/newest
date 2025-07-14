@@ -8,6 +8,7 @@ import ProjectDetails from "./Component/ProjectDetails";
 import ProjectTrackingDashboard from "./Component/ProjectTrackingDashboard";
 import LandingPage from "./Component/LandingPage";
 import Manager from "./Component/Manager"
+import PowerBiEmbed from "./PowerBiEmbed";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -59,6 +60,8 @@ const App = () => {
           <Route path="/dashboard" element={<ProjectTrackingDashboard />} />
           <Route path="/delegate/:projectId" element={<Delegate />} />
           <Route path="/manager" element={<Manager />} />
+           <Route path="/PowerBiEmbed" element={<PowerBiEmbed />} />
+ 
 
           <Route path="*" element={<Navigate to="/landing" replace />} />
         </>
