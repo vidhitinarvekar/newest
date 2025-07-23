@@ -46,13 +46,13 @@ const fetchAssignedFTEs = async () => {
   try {
     // Initiate both API calls concurrently
     const [assignedFTEsResponse, allProjectsResponse] = await Promise.all([
-      // axios.get(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/${projectId}`),
-      axios.get('https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/fte-by-owner', {
+      // axios.get(https://localhost:7049/api/ProjectFteEmployee/${projectId}`),
+      axios.get('https://localhost:7049/api/ProjectFteEmployee/fte-by-owner', {
     params: {
       projectId: projectId,
     },
   }),
-      axios.get("https://opsvisionbe.integrator-orange.com/api/ProjectFte/all")
+      axios.get("https://localhost:7049/api/ProjectFte/all")
     ]);
 
     const { assignedEmployees, remainingHours, projectName, primeCode } = assignedFTEsResponse.data;
@@ -98,7 +98,7 @@ const fetchAssignedFTEs = async () => {
 
   const fetchCommittedHours = async (staffId, projectId) => {
     try {
-      const response = await axios.get(`https://opsvisionbe.integrator-orange.com/api/ProjectFteManagement/project/${projectId}/committed-hours`, {
+      const response = await axios.get(`https://localhost:7049/api/ProjectFteManagement/project/${projectId}/committed-hours`, {
         params: { projectId, managerStaffId: staffId }
       });
       return response.data.managerTeamTotal || 0;
@@ -132,7 +132,7 @@ const fetchAssignedFTEs = async () => {
         return;
       }
       try {
-        const response = await axios.get(`https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/searchs`, {
+        const response = await axios.get(`https://localhost:7049/api/ProjectFteEmployee/searchs`, {
           params: { searchTerm: searchQuery },
         });
         setSearchResults(response.data);
@@ -147,7 +147,7 @@ const fetchAssignedFTEs = async () => {
   useEffect(() => {
   const fetchRemarksOptions = async () => {
     try {
-      const res = await axios.get("https://opsvisionbe.integrator-orange.com/api/ProjectManagement/fte/remarks");
+      const res = await axios.get("https://localhost:7049/api/ProjectManagement/fte/remarks");
       setRemarksOptions(res.data);
     } catch (error) {
       console.error("Error fetching remarks options:", error);
@@ -263,7 +263,7 @@ const fetchAssignedFTEs = async () => {
 
       console.log("📤 Sending payload to API:", payload);
 
-      const response = await axios.post("https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/allocate", payload);
+      const response = await axios.post("https://localhost:7049/api/ProjectFteEmployee/allocate", payload);
       console.log("✅ Save response:", response);
 
       // Clean up after successful save
@@ -343,7 +343,7 @@ const handleUpdateFTE = async (staffId) => {
   fteAllocationId: fteAllocationIds[staffId], 
     };
 
-    await axios.put("https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/update", payload);
+    await axios.put("https://localhost:7049/api/ProjectFteEmployee/update", payload);
 
     // Refresh assigned FTEs after successful update
     await fetchAssignedFTEs();
@@ -413,7 +413,7 @@ const handleUpdateFTE = async (staffId) => {
       // Submit each payload individually
       for (const payload of payloadList) {
         try {
-          await axios.post("https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/allocate", payload);
+          await axios.post("https://localhost:7049/api/ProjectFteEmployee/allocate", payload);
         } catch (err) {
           console.error(`❌ Failed to save for staffId ${payload.staffId}`, err);
           failedList.push(payload.staffId);
@@ -470,7 +470,7 @@ const handleUpdateFTE = async (staffId) => {
         };
 
         try {
-          await axios.put("https://opsvisionbe.integrator-orange.com/api/ProjectFteEmployee/update", payload);
+          await axios.put("https://localhost:7049/api/ProjectFteEmployee/update", payload);
         } catch (error) {
           console.error("Failed to update", error);
           failedStaff.push(`${fte.firstName} ${fte.lastName}`);

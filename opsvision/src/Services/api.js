@@ -1,8 +1,7 @@
 import axios from "axios";
 
-const API_BASE_URL = "https://opsvisionbe.integrator-orange.com/api";
+const API_BASE_URL = "https://localhost:7049/api";
 const ownerId = localStorage.getItem("staffId");
-
 // Global axios config with auth and headers
 axios.interceptors.request.use(
   (config) => {
@@ -48,7 +47,7 @@ export const allocateProjectFte = async ({ projectId, primeCode, allocatedFte })
 
 export const getProjectsByOwnerId = async (staffId) => {
   const token = localStorage.getItem("token"); // Adjust key name if different
-  const response = await fetch(`https://opsvisionbe.integrator-orange.com/api/ProjectFte/by-owner/${staffId}`, {
+  const response = await fetch(`https://localhost:7049/api/ProjectFte/by-owner/${staffId}`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -109,12 +108,27 @@ export const getProjectFteDetails = async (projectId) => {
 
 
 // Login
-export const login = async (username, password) => {
+// export const login = async (username, password) => {
+//   try {
+//     const response = await axios.post(`${API_BASE_URL}/Auth/login`, {
+//       username,
+//       password
+//     });
+//     const data = response.data;
+
+//     if (data?.token && data?.role) {
+//       return data;
+//     } else {
+//       throw new Error("Invalid response from server.");
+//     }
+//   } catch (error) {
+//     console.error("Login failed:", error?.response?.data || error.message);
+//     throw new Error("Login failed. Check credentials.");
+//   }
+// };
+export const login = async (email) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/Auth/login`, {
-      username,
-      password
-    });
+    const response = await axios.post(`${API_BASE_URL}/Auth/login`, { email });
     const data = response.data;
 
     if (data?.token && data?.role) {

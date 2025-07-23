@@ -82,7 +82,7 @@ class Manager extends Component {
                     }
 
                     try {
-                        const { data } = await secureAxios.get(`https://opsvisionbe.integrator-orange.com/api/ProjectFteManagement/project/${proj.projectId}/committed-hours`, {
+                        const { data } = await secureAxios.get(`https://localhost:7049/api/ProjectFteManagement/project/${proj.projectId}/committed-hours`, {
 
                             params: {
 
@@ -148,7 +148,7 @@ class Manager extends Component {
     fetchCommittedHours = async (staffId, projectId) => {
         try {
             const { data } = await axios.get(
-                `https://opsvisionbe.integrator-orange.com/api/ProjectFteManagement/project/${projectId}/committed-hours`,
+                `https://localhost:7049/api/ProjectFteManagement/project/${projectId}/committed-hours`,
                 {
                     params: {
                         projectId,

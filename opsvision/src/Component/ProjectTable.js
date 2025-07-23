@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaEdit, FaCheck } from "react-icons/fa";
 import "./ProjectTable.css";
 import logo from "./images.png";
-import homeIcon from "./home.png"; // <-- Import your home icon here
+import homeIcon from "./home.png"; // <-- Import your home icon 
 import axios from "axios";
 import {
   getProjects,
@@ -11,7 +11,7 @@ import {
   allocateProjectFte,
   getProjectsByOwnerId
 } from "../Services/api";
-import Loader from "./Loader"; // adjust the path if needed
+import Loader from "./Loader"; // adjust the path if 
 import logoutIcon from './logout.png';
 
 
@@ -176,7 +176,7 @@ setProjects(Array.from(new Map(data.map(p => [p.projectId, p])).values()));
   const userRole = localStorage.getItem("role")?.toLowerCase();
   const fetchOwnerOptions = async (projectId) => {
     try {
-      const response = await axios.get("https://opsvisionbe.integrator-orange.com/api/ProjectManagement/search-managers");
+      const response = await axios.get("https://localhost:7049/api/ProjectManagement/search-managers");
       setOwnerOptions((prev) => ({ ...prev, [projectId]: response.data }));
     } catch (err) {
       console.error("Error fetching managers", err);
@@ -201,7 +201,7 @@ setProjects(Array.from(new Map(data.map(p => [p.projectId, p])).values()));
     }
 
     try {
-      await axios.put("https://opsvisionbe.integrator-orange.com/api/ProjectManagement/update-projectowner-staff", {
+      await axios.put("https://localhost:7049/api/ProjectManagement/update-projectowner-staff", {
         projectId,
         newStaffId: staffId,
       });
