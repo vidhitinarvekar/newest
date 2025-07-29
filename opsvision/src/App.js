@@ -63,7 +63,8 @@ const App = () => {
            <Route path="/PowerBiEmbed" element={<PowerBiEmbed />} />
            <Route path="/powerbi/:reportId" element={<PowerBiEmbed />} />
            <Route path="/project-details/:projectTaskId" element={<ProjectDetails />} />
-           
+           <Route path="/delegate/:projectTaskId" element={<Delegate />} />
+
 
 
  

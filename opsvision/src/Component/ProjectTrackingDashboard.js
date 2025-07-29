@@ -96,7 +96,7 @@ class ProjectTrackingDashboard extends Component {
 
                 secureAxios.get("/api/ProjectManagement/get-committed-hours", {
 
-                    params: { projectId: proj.projectId, staffId }
+                    params: { projectTaskId: proj.projectTaskId, staffId }
 
                 }).then(res => res.data?.committedHours || 0).catch(err => {
 
@@ -126,6 +126,7 @@ class ProjectTrackingDashboard extends Component {
 
                     primeCode: proj.primeCode || "N/A",
                     taskName: proj.taskName || "n/a",
+                    projectTaskId:proj.projectTaskId,
 
                     allocatedHours: allocated,
 
@@ -231,19 +232,23 @@ class ProjectTrackingDashboard extends Component {
 
         const isFirstEntry = project.committedHours === 0;
         const postRequestBody = {
+           
             committedHoursDto: {
-                projectId: project.projectId,
+                projectTaskId: project.projectTaskId,
                 staffId: Number(staffId),
-                committedHours: committedHours,
-                completedHours: 0
-            }
-        };
+                committedHours: committedHours
+                
+              }
+            
+          };
+          
         const putRequestBody = {
-            projectId: project.projectId,
-            staffId: Number(staffId),
-            committedHours: committedHours,
-            completedHours: 0,
-            remarks: ""
+            committedHoursDto: {
+                projectTaskId: project.projectTaskId,
+                staffId: Number(staffId),
+                committedHours: committedHours
+                
+              }
         };
 
         try {

@@ -285,3 +285,130 @@
   font-weight: bold;
 }
 
+
+.powerbi-selection {
+
+  text-align: center;
+
+  margin-top: 40px;
+
+  color: white;
+
+}
+ 
+.section-title {
+
+  font-size: 24px;
+
+  color: #ff7900;
+
+  margin-bottom: 20px;
+
+}
+ 
+.report-card-container {
+
+  display: flex;
+
+  justify-content: center;
+
+  gap: 30px;
+
+  flex-wrap: wrap;
+
+}
+ 
+.report-card {
+
+  background-color: #1a1a1a;
+
+  border: 2px solid #ff7900;
+
+  border-radius: 12px;
+
+  padding: 20px 30px;
+
+  width: 250px;
+
+  box-shadow: 0 0 15px rgba(255, 121, 0, 0.4);
+
+  cursor: pointer;
+
+  transition: transform 0.3s, box-shadow 0.3s;
+
+}
+ 
+.report-card:hover {
+
+  transform: scale(1.05);
+
+  box-shadow: 0 0 20px rgba(255, 121, 0, 0.7);
+
+}
+ 
+.report-card h3 {
+
+  margin-top: 10px;
+
+  color: white;
+
+}
+ 
+.report-card p {
+
+  font-size: 14px;
+
+  color: #ccc;
+
+}
+ 
+.report-icon {
+
+  font-size: 30px;
+
+  color: #ff7900;
+
+}
+.powerbi-tabs {
+
+  display: flex;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  margin-bottom: 30px;
+
+}
+ 
+.tab-button {
+
+  padding: 10px 20px;
+
+  background-color: #333;
+
+  border: 1px solid #ff7900;
+
+  color: white;
+
+  cursor: pointer;
+
+  border-radius: 5px;
+
+  transition: all 0.3s ease;
+
+}
+ 
+.tab-button.active,
+
+.tab-button:hover {
+
+  background-color: #ff7900;
+
+  color: black;
+
+}
+
+ 
+ 
+

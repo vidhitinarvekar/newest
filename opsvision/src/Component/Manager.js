@@ -149,21 +149,20 @@ class Manager extends Component {
 
     fetchCommittedHours = async (staffId, projectTaskId) => {
         try {
-            const { data } = await axios.get(
-                `https://localhost:7049/api/ProjectFteManagement/project/${projectTaskId}/committed-hours`,
-                {
-                    params: {
-                        projectTaskId,
-                        managerStaffId: staffId
-                    }
-                }
-            );
-            return data.managerTeamTotal || 0;
+          const { data } = await axios.get(
+            `https://localhost:7049/api/ProjectManagement/get-committed-hours`,
+            {
+              params: { projectTaskId, staffId }
+            }
+          );
+          // Return the committedHours from the response, fallback 0 if undefined
+          return data.committedHours || 0;
         } catch (error) {
-            console.error("Error fetching committed hours:", error);
-            return 0;
+          console.error("Error fetching committed hours:", error);
+          return 0;
         }
-    };
+      };
+      
 
 
     handleHoursChange = (index, hours) => {
@@ -225,19 +224,20 @@ class Manager extends Component {
 
         const postRequestBody = {
             committedHoursDto: {
-                projectId: project.projectId,
+                projectTaskId: project.projectTaskId,
                 staffId: Number(staffId),
-                committedHours: committedHours,
-                completedHours: 0
-            }
+                committedHours: committedHours
+                
+              }
         };
 
         const putRequestBody = {
-            projectId: project.projectId,
-            staffId: Number(staffId),
-            committedHours: committedHours,
-            completedHours: 0,
-            remarks: "" // You can modify this if you want to collect remarks from user
+            committedHoursDto: {
+                projectTaskId: project.projectTaskId,
+                staffId: Number(staffId),
+                committedHours: committedHours
+                
+              }
         };
 
         try {
@@ -365,11 +365,12 @@ class Manager extends Component {
                                                 <span
                                                     className="project-link"
                                                     onClick={() =>
-                                                        this.props.navigate(`/delegate/${project.projectId}`, {
+                                                        this.props.navigate(`/delegate/${project.projectTaskId}`, {
                                                             state: {
                                                                 primeCode: project.primeCode,
                                                                 allocatedHours: project.allocatedHours,
                                                                 projectId: project.projectId,
+                                                                taskName: project.taskName,
                                                                 remainingHrs: project.remainingHrs,
                                                             },
                                                         })
