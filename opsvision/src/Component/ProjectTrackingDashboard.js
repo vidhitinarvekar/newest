@@ -125,6 +125,7 @@ class ProjectTrackingDashboard extends Component {
                     projectId: proj.projectId,
 
                     primeCode: proj.primeCode || "N/A",
+                    taskName: proj.taskName || "n/a",
 
                     allocatedHours: allocated,
 
@@ -395,7 +396,9 @@ class ProjectTrackingDashboard extends Component {
 
                                         <td>{project.delegatedByName}</td>
 
-                                        <td>{project.primeCode}</td>
+                                        <td>{project.primeCode}-{project.taskName}</td>
+                                        
+
 
                                         <td>{project.allocatedHours}</td>
 

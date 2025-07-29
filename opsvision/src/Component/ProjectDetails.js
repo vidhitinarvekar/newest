@@ -11,7 +11,10 @@ import back from "./backs.png";
 import { useLocation } from 'react-router-dom';
 
 export default function ProjectDetails() {
-  const { projectId } = useParams();
+  // const { projectId } = useParams();
+  const [projectId, setProjectId] = useState(null);
+
+  
   const navigate = useNavigate();
   const searchResultsRef = useRef(null);
   const searchInputRef = useRef(null);
@@ -23,43 +26,71 @@ export default function ProjectDetails() {
   const [fteHours, setFteHours] = useState({});
   const [newFTEs, setNewFTEs] = useState([]);
   // const [totalHours, setTotalHours] = useState(0);
-  const [totalHours, setTotalHours] = useState(0); // For total hours
+  // const [totalHours, setTotalHours] = useState(0); // For total hours
+  const[setTotalHours]=useState(0);
+  // const[setPrimeCode]=useState(0);
   const [remainingHours, setRemainingHours] = useState(0);
   const [projectName, setProjectName] = useState("");
-  const [primeCode, setPrimeCode] = useState("");
+  // const [primeCode, setPrimeCode] = useState("");
+  const [primeCode, setPrimeCode] = useState("N/A");
+  const [editableFTEs, setEditableFTEs] = useState({});
+
+
   const [delegateFor, setDelegateFor] = useState(null);
   const [delegates, setDelegates] = useState({});
   const [delegatedHours, setDelegatedHours] = useState({});
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [committedHours, setCommittedHours] = useState({});
   const [remarksOptions, setRemarksOptions] = useState([]);
-  const location = useLocation();
+  
   const [fteRemarks, setFteRemarks] = useState({});
+  const [managerHoursMap, setManagerHoursMap] = useState({});
   const initialAllocationIds = {}; 
   const [fteAllocationIds, setFteAllocationIds] = useState({});
+  // const { projectTaskId } = useParams();
+   const location = useLocation();
+  const { projectTaskId, taskName, totalHours,primeCodeWithTaskName } = location.state || {};
+
 
 
   const fromPage = location.state?.fromPage || 1;
 const fetchAssignedFTEs = async () => {
-  if (!projectId) return;
+  const pathSegments = window.location.pathname.split('/');
+  const projectTaskId = pathSegments[pathSegments.length - 1];
+
+  console.log('Extracted projectTaskId:', projectTaskId);
+
+  if (!projectTaskId) {
+    console.warn('No projectTaskId found in URL');
+    return;
+  }
 
   try {
+    console.log('Fetching FTEs for projectTaskId:', projectTaskId);
     // Initiate both API calls concurrently
     const [assignedFTEsResponse, allProjectsResponse] = await Promise.all([
       // axios.get(https://localhost:7049/api/ProjectFteEmployee/${projectId}`),
       axios.get('https://localhost:7049/api/ProjectFteEmployee/fte-by-owner', {
     params: {
-      projectId: projectId,
+      // projectTaskId: projectTaskId,
+      projectTaskId: Number(projectTaskId),
     },
   }),
       axios.get("https://localhost:7049/api/ProjectFte/all")
     ]);
 
-    const { assignedEmployees, remainingHours, projectName, primeCode } = assignedFTEsResponse.data;
+    const { assignedEmployees, remainingHours,projectId, projectName, primeCode ,primeCodeWithTaskName} = assignedFTEsResponse.data;
     setAllocatedFTEs(assignedEmployees || []);
     setRemainingHours(remainingHours || 0);
     setProjectName(projectName || "Unknown Project");
-    setPrimeCode(primeCode || "N/A");
+    setPrimeCode(primeCodeWithTaskName || "N/A");
+    setProjectId(projectId); // Save projectId in state
+
+    const updatedHours = {};
+    (assignedEmployees || []).forEach((fte) => {
+      updatedHours[fte.staffId] = fte.allocatedHours ?? 0;
+    });
+    setFteHours(updatedHours);
 
     const allocatedSum = (assignedEmployees || []).reduce(
       (sum, fte) => sum + (Number(fte.allocatedHours) || 0),
@@ -69,8 +100,11 @@ const fetchAssignedFTEs = async () => {
 
     const initialHours = {};
         const initialRemarks = {};
+        const initialAllocationIds = {};
     (assignedEmployees || []).forEach((fte) => {
-      initialHours[fte.staffId] = fte.allocatedHours;
+      console.log("FTE Allocated Hours:", fte.staffId, fte.allocatedHours);
+      initialHours[fte.staffId] = fte.allocatedHours ?? 0;
+
       initialRemarks[fte.staffId] = fte.remarks || "";  //  Extract remarks from each FTE
        initialAllocationIds[fte.staffId] = fte.fteAllocationId; //  Store allocation ID
 
@@ -94,12 +128,23 @@ const fetchAssignedFTEs = async () => {
     console.error("Error fetching project data:", error);
   }
 };
-
+useEffect(() => {
+  async function load() {
+    await fetchAssignedFTEs();
+  }
+  load();
+}, []);
 
   const fetchCommittedHours = async (staffId, projectId) => {
+    const pathSegments = window.location.pathname.split('/');
+  const projectTaskId = pathSegments[pathSegments.length - 1];
+  console.log("Fetching committed hours with:");
+  console.log("→ projectTaskIdss:", projectTaskId);
     try {
-      const response = await axios.get(`https://localhost:7049/api/ProjectFteManagement/project/${projectId}/committed-hours`, {
-        params: { projectId, managerStaffId: staffId }
+      const response = await axios.get(`https://localhost:7049/api/ProjectFteManagement/projecttask/${projectTaskId}/committed-hours`, {
+       params: {
+          managerStaffId: staffId  // ✅ correct as query param
+        }
       });
       return response.data.managerTeamTotal || 0;
     } catch (error) {
@@ -119,10 +164,40 @@ const fetchAssignedFTEs = async () => {
   setCommittedHours(hours);
 };
 
+const fetchManagerTeamTotalHours = async (staffId) => {
+  const pathSegments = window.location.pathname.split('/');
+  const projectTaskId = pathSegments[pathSegments.length - 1];
 
-  useEffect(() => {
-    if (projectId) fetchAssignedFTEs();
-  }, [projectId]);
+  try {
+    const response = await axios.get(`https://localhost:7049/api/ProjectFteManagement/projecttask/${projectTaskId}/committed-hours`, {
+      params: {
+        managerStaffId: staffId,
+      },
+    });
+    console.log('Manager team total hours:', response.data.managerTeamTotal);
+    return response.data.managerTeamTotal || 0;
+  } catch (error) {
+    console.error('Error fetching manager team total:', error);
+    return 0;
+  }
+};
+useEffect(() => {
+  const fetchAllManagerHours = async () => {
+    const hoursObj = {};
+    for (const fte of allocatedFTEs) {
+      const hours = await fetchManagerTeamTotalHours(fte.staffId);
+      hoursObj[fte.staffId] = hours;
+    }
+    setManagerHoursMap(hoursObj);
+  };
+
+  fetchAllManagerHours();
+}, [allocatedFTEs]);
+
+useEffect(() => {
+  fetchAssignedFTEs();
+}, [location.pathname]);
+
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -181,6 +256,10 @@ const fetchAssignedFTEs = async () => {
         alert("This employee is already assigned.");
         return;
       }
+setEditableFTEs((prev) => ({
+      ...prev,
+      [fte.staffId]: true,
+    }));
 
       const newFteEntry = {
         staffId: fte.staffId,
@@ -292,6 +371,14 @@ const fetchAssignedFTEs = async () => {
   };
 
 const handleUpdateFTE = async (staffId) => {
+  const pathSegments = window.location.pathname.split('/');
+  const projectTaskId = pathSegments[pathSegments.length - 1];
+
+  if (!projectTaskId) {
+    alert("Project Task ID not found in URL");
+    return;
+  }
+
   try {
     const allocatedHours = Number(fteHours[staffId]);
 
@@ -304,9 +391,7 @@ const handleUpdateFTE = async (staffId) => {
       }));
 
     if (!isManager && (!allocatedHours || allocatedHours <= 0)) {
-      alert("Allocated hours must be greater than 0.");
-
-      // Reset the value for this staff from fresh data
+      alert("Allocated hours must be greater than 0");
       await fetchAssignedFTEs();
       const freshFte = allocatedFTEs.find(fte => fte.staffId === staffId);
       if (freshFte) {
@@ -319,9 +404,7 @@ const handleUpdateFTE = async (staffId) => {
     }
 
     if (!isManager && allocatedHours > calculateCurrentRemainingHours(staffId)) {
-      alert("Not enough remaining hours.");
-
-      // Fetch fresh FTE data and reset the allocated hours for this staff
+      alert("Not enough remaining hours");
       await fetchAssignedFTEs();
       const freshFte = allocatedFTEs.find(fte => fte.staffId === staffId);
       if (freshFte) {
@@ -334,24 +417,19 @@ const handleUpdateFTE = async (staffId) => {
     }
 
     const payload = {
+      projectTaskId: Number(projectTaskId),
       projectId: Number(projectId),
-      primeCode,
       staffId: isManager ? 0 : staffId,
       allocatedHours: isManager ? 0 : allocatedHours,
       delegatees: delegateeList,
-      remarks: fteRemarks[staffId] || "",            
-  fteAllocationId: fteAllocationIds[staffId], 
     };
 
     await axios.put("https://localhost:7049/api/ProjectFteEmployee/update", payload);
-
-    // Refresh assigned FTEs after successful update
     await fetchAssignedFTEs();
+
   } catch (error) {
     console.error("Error updating FTE:", error);
     alert("Failed to update FTE.");
-
-    // Fetch fresh data and reset state on error (no page reload)
     await fetchAssignedFTEs();
     const freshFte = allocatedFTEs.find(fte => fte.staffId === staffId);
     if (freshFte) {
@@ -362,8 +440,16 @@ const handleUpdateFTE = async (staffId) => {
     }
   }
 };
+
   const handleSaveAllFTEs = async () => {
-     console.log("Update All button clicked");
+    const pathSegments = window.location.pathname.split('/');
+    const projectTaskId = pathSegments[pathSegments.length - 1];
+
+    if (!projectTaskId) {
+      alert("Project Task ID not found in URL");
+      return;
+    }
+     
     try {
       let remainingPool = totalHours - allocatedFTEs.reduce((sum, fte) => {
         return newFTEs.find(n => n.staffId === fte.staffId)
@@ -398,12 +484,13 @@ const handleUpdateFTE = async (staffId) => {
           }));
   
         payloadList.push({
-          projectId: Number(projectId),
-          primeCode,
+          projectTaskId: Number(projectTaskId),
+          // projectId: Number(projectId),
+          // primeCode,
           staffId: isManager ? 0 : staffId,
           allocatedHours: isManager ? 0 : allocated,
           delegatees: delegateeList,
-          remarks: fteRemarks[staffId] || "",            
+          // remarks: fteRemarks[staffId] || "",            
   
         });
       }
@@ -490,16 +577,53 @@ const handleUpdateFTE = async (staffId) => {
     }
   };
 
+  // const handleDeleteFTE = async (staffId) => {
+  //   try {
+  //     await deleteProjectFte(projectId, staffId);
+    
+  //     setAllocatedFTEs((prev) => prev.filter((fte) => fte.staffId !== staffId));
+  //     fetchAssignedFTEs();
+  //   } catch (error) {
+  //     console.error("Error deleting FTE:", error);
+  //   }
+  // };
+
   const handleDeleteFTE = async (staffId) => {
-    try {
-      await deleteProjectFte(projectId, staffId);
-      // alert("FTE deleted.");
-      setAllocatedFTEs((prev) => prev.filter((fte) => fte.staffId !== staffId));
-      fetchAssignedFTEs();
-    } catch (error) {
-      console.error("Error deleting FTE:", error);
+  try {
+    // Extract projectTaskId from URL
+    const pathSegments = window.location.pathname.split('/');
+    const projectTaskId = pathSegments[pathSegments.length - 1];
+
+    if (!projectTaskId) {
+      alert("Project Task ID not found in URL");
+      return;
     }
-  };
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("User not authenticated");
+      return;
+    }
+
+    // Call the API with auth header
+    const response = await fetch(`https://localhost:7049/api/ProjectFteEmployee/delete/${projectTaskId}/${staffId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // Update state after deletion
+    setAllocatedFTEs((prev) => prev.filter((fte) => fte.staffId !== staffId));
+    fetchAssignedFTEs();
+  } catch (error) {
+    console.error("Error deleting FTE:", error);
+  }
+};
 
   const handleDelegateClick = (fte) => {
     setDelegateFor(fte);
@@ -538,7 +662,8 @@ const handleUpdateFTE = async (staffId) => {
     window.location.reload();
   };
 
-  const totalCommittedHours = Object.values(committedHours).reduce((sum, hours) => sum + hours, 0);
+  const totalCommittedHours = Object.values(managerHoursMap).reduce((sum, hours) => sum + hours, 0);
+  console.log('Committed Hours:', committedHours);
   const assignedToEmployees = totalHours - calculateCurrentRemainingHours();
   const remainingCommittedHours = assignedToEmployees - totalCommittedHours;
 
@@ -547,7 +672,7 @@ const handleUpdateFTE = async (staffId) => {
     <div className="containers">
 
 
-      <div className="detail-dashboard-header">
+      <div className="detail--dashboard-header">
   {/* Left Side: Logo + Title */}
   <div className="detail-left-section">
     <img src={logo} alt="Orange Business Logo" className="detail-logo" />
@@ -636,7 +761,7 @@ const handleUpdateFTE = async (staffId) => {
 
 
         {/* FTE Table */}
-        <h3 className="table-heading">Allocated FTEs</h3>
+        {/* <h3 className="table-heading">Allocated FTEs</h3> */}
         <div className="table-scroll-wrapper">
           <table className="borders">
             <thead>
@@ -644,8 +769,9 @@ const handleUpdateFTE = async (staffId) => {
                 <th>FTE Name</th>
                 {/* <th>Staff ID</th> */}
                 <th>Allocated Hours</th>
-                <th>Task</th>
+                {/* <th>Task</th> */}
                 <th>Committed Hours</th>
+                <th>Remaining Hours</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -654,47 +780,59 @@ const handleUpdateFTE = async (staffId) => {
                 <React.Fragment key={fte.staffId}>
                   <tr>
                     <td>{fte.firstName} {fte.lastName}</td>
-                    {/* <td>{fte.staffId}</td> */}
-                    <td>
-                      <input
-                        type="number"
-                        min="0"
-                        value={fteHours[fte.staffId] ?? ""}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setFteHours((prev) => ({ ...prev, [fte.staffId]: value }));
-                        }}
-                      />
-                    </td>
-                    <td>
- <select
-  value={fteRemarks[fte.staffId] || ""}
-  onChange={(e) => {
-    const value = e.target.value;
-    setFteRemarks((prev) => ({
-      ...prev,
-      [fte.staffId]: value,
-    }));
-  }}
->
-  <option value="">Select a Task</option>
-  {remarksOptions.map((option, index) => (
-    <option key={index} value={option}>
-      {option}
-    </option>
-  ))}
-</select>
+                  
 
+<td>
+  <input
+    type="number"
+    min="0"
+    readOnly={!editableFTEs[fte.staffId]} // Only editable after "Update" clicked
+    
+    value={fteHours[fte.staffId] ?? 0}
+    onChange={(e) => {
+      const value = e.target.value;
+      setFteHours((prev) => ({ ...prev, [fte.staffId]: value }));
+    }}
+  />
 </td>
 
-                    <td>{committedHours[fte.staffId] || 0}</td>
+
+ 
+           
+
+                   <td>{managerHoursMap[fte.staffId] || 0}</td>
+                   <td>{(fteHours[fte.staffId] ?? 0)-(managerHoursMap[fte.staffId] || 0)}</td>
+
+
+                    
                     <td className="table-actions">
                       {newFTEs.some((n) => n.staffId === fte.staffId) ? (
                          <button onClick={handleSaveAllFTEs} className="orange-btn" style={{ marginRight: '8px' }}>Save All</button>
 
                       ) : (
                         <>
-                          <button onClick={() => handleUpdateFTE(fte.staffId)} style={{ marginRight: '8px' }}>Update</button>
+                          {/* <button onClick={() => handleUpdateFTE(fte.staffId)} style={{ marginRight: '8px' }}>Update</button> */}
+                          {editableFTEs[fte.staffId] ? (
+  <button
+    onClick={() => {
+      handleUpdateFTE(fte.staffId); // save changes
+      setEditableFTEs((prev) => ({ ...prev, [fte.staffId]: false })); // lock field
+    }}
+    style={{ marginRight: '8px' }}
+  >
+    Save
+  </button>
+) : (
+  <button
+    onClick={() =>
+      setEditableFTEs((prev) => ({ ...prev, [fte.staffId]: true }))
+    }
+    style={{ marginRight: '8px' }}
+  >
+    Update
+  </button>
+)}
+
                           <button onClick={() => handleDeleteFTE(fte.staffId)}>Delete</button>
                         </>
                       )} 

@@ -71,7 +71,7 @@ class Manager extends Component {
                     try {
                         const committedRes = await secureAxios.get("/api/ProjectManagement/get-committed-hours", {
                             params: {
-                                projectId: proj.projectId,
+                                projectTaskId: proj.projectTaskId,
                                 staffId: staffId
                             },
                             headers: { Authorization: `Bearer ${tokenFromLocalStorage}` }
@@ -82,7 +82,7 @@ class Manager extends Component {
                     }
 
                     try {
-                        const { data } = await secureAxios.get(`https://localhost:7049/api/ProjectFteManagement/project/${proj.projectId}/committed-hours`, {
+                        const { data } = await secureAxios.get(`https://localhost:7049/api/ProjectFteManagement/project/${proj.projectTaskId}/committed-hours`, {
 
                             params: {
 
@@ -103,6 +103,7 @@ class Manager extends Component {
                     return {
                         projectId: proj.projectId || "N/A",
                         primeCode: proj.primeCode || "N/A",
+                        taskName: proj.taskName || "N/A",
                         allocatedHours: proj.allocatedHours ?? 0,
                         assignedBy: proj.assignedByName || "Unknown",
                         committedHours: totalCommittedHours, // use this as readonly committed hours
@@ -110,6 +111,7 @@ class Manager extends Component {
                         remainingHrs: proj.allocatedHours - lastCommittedHours,
                         managerTeamTotal: managerTeamTotal,
                         lastCommittedHours: lastCommittedHours,
+                        projectTaskId:proj.projectTaskId,
                         remarks: proj.remarks || "" 
                     };
                 })
@@ -145,13 +147,13 @@ class Manager extends Component {
 
 
 
-    fetchCommittedHours = async (staffId, projectId) => {
+    fetchCommittedHours = async (staffId, projectTaskId) => {
         try {
             const { data } = await axios.get(
-                `https://localhost:7049/api/ProjectFteManagement/project/${projectId}/committed-hours`,
+                `https://localhost:7049/api/ProjectFteManagement/project/${projectTaskId}/committed-hours`,
                 {
                     params: {
-                        projectId,
+                        projectTaskId,
                         managerStaffId: staffId
                     }
                 }
@@ -339,7 +341,7 @@ class Manager extends Component {
                                 <tr>
                                     <th>Assigned By</th>
                                     <th>PrimeCode</th>
-                                    <th>Task</th>
+                                    {/* <th>Task</th> */}
                                     <th>Allocated Hours</th>
                                     <th>Commit Hours</th>
                                     <th>Your committed</th>
@@ -374,13 +376,13 @@ class Manager extends Component {
                                                     }
                                                     style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
                                                 >
-                                                    {project.primeCode}
+                                                    {project.primeCode}-{project.taskName}
                                                 </span>
                                             ) : (
-                                                <span>{project.primeCode}</span>
+                                                <span>{project.primeCode}-{project.taskName}</span>
                                             )}
                                         </td>
-                                        <td>{project.remarks}</td>
+                                        {/* <td>{project.remarks}</td> */}
                                         <td>{project.allocatedHours}</td>
                                         <td>
                                             {editingIndex === index ? (

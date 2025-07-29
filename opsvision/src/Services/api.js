@@ -1,5 +1,5 @@
 import axios from "axios";
-
+ 
 const API_BASE_URL = "https://localhost:7049/api";
 const ownerId = localStorage.getItem("staffId");
 // Global axios config with auth and headers
@@ -17,8 +17,8 @@ axios.interceptors.request.use(
   },
   Promise.reject
 );
-
-
+ 
+ 
 // Fetch all projects
 export const getProjects = async () => {
   try {
@@ -29,7 +29,7 @@ export const getProjects = async () => {
     return [];
   }
 };
-
+ 
 // Allocate FTE to a project
 export const allocateProjectFte = async ({ projectId, primeCode, allocatedFte }) => {
   try {
@@ -44,7 +44,7 @@ export const allocateProjectFte = async ({ projectId, primeCode, allocatedFte })
     throw error;
   }
 };
-
+ 
 export const getProjectsByOwnerId = async (staffId) => {
   const token = localStorage.getItem("token"); // Adjust key name if different
   const response = await fetch(`https://localhost:7049/api/ProjectFte/by-owner/${staffId}`, {
@@ -54,18 +54,18 @@ export const getProjectsByOwnerId = async (staffId) => {
       "Content-Type": "application/json"
     }
   });
-
+ 
   if (!response.ok) {
     const errorText = await response.text();
     console.error(`Fetch failed: ${response.status} - ${errorText}`);
     throw new Error("Failed to fetch projects by owner");
   }
-
+ 
   return await response.json();
 };
-
-
-
+ 
+ 
+ 
 // Delete FTE allocation from a project
 export const deleteProjectFte = async (primeCode, staffId) => {
   try {
@@ -77,8 +77,8 @@ export const deleteProjectFte = async (primeCode, staffId) => {
     throw error;
   }
 };
-
-
+ 
+ 
 // Update FTE for a project
 export const updateProjectFte = async ({ projectId, primeCode, allocatedFte }) => {
   try {
@@ -93,8 +93,8 @@ export const updateProjectFte = async ({ projectId, primeCode, allocatedFte }) =
     throw error;
   }
 };
-
-
+ 
+ 
 // Get FTE details for a project
 export const getProjectFteDetails = async (projectId) => {
   try {
@@ -105,8 +105,8 @@ export const getProjectFteDetails = async (projectId) => {
     return null;
   }
 };
-
-
+ 
+ 
 // Login
 // export const login = async (username, password) => {
 //   try {
@@ -115,7 +115,7 @@ export const getProjectFteDetails = async (projectId) => {
 //       password
 //     });
 //     const data = response.data;
-
+ 
 //     if (data?.token && data?.role) {
 //       return data;
 //     } else {
@@ -127,10 +127,16 @@ export const getProjectFteDetails = async (projectId) => {
 //   }
 // };
 export const login = async (email) => {
-  try {
-    const response = await axios.post(`${API_BASE_URL}/Auth/login`, { email });
+ try {
+    const payload = {
+      username: "", // sending as empty string
+      password: "", // sending as empty string
+      email
+    };
+ 
+    const response = await axios.post(`${API_BASE_URL}/Auth/locallogin`, payload);
     const data = response.data;
-
+ 
     if (data?.token && data?.role) {
       return data;
     } else {
@@ -141,8 +147,8 @@ export const login = async (email) => {
     throw new Error("Login failed. Check credentials.");
   }
 };
-
-
+ 
+ 
 // Get user projects
 export const getUserProjectsByEmail = async (email) => {
   try {
@@ -153,7 +159,7 @@ export const getUserProjectsByEmail = async (email) => {
     return [];
   }
 };
-
+ 
 // Update committed hours
 export const updateCommittedHours = async ({ projectId, committedHours }) => {
   try {
@@ -167,8 +173,8 @@ export const updateCommittedHours = async ({ projectId, committedHours }) => {
     return null;
   }
 };
-
-
+ 
+ 
 // Assign employee to a project
 // Allocate FTE to a project
 export const assignEmployeeToProject= async (projectId, primeCode, staffId, allocatedHours) => {
@@ -185,8 +191,8 @@ export const assignEmployeeToProject= async (projectId, primeCode, staffId, allo
     throw error;  // Rethrow error to handle in the calling function
   }
 };
-
-
+ 
+ 
 // Update employee assignment
 export const updateEmployeeAssignment = async (primeCode, employeeId, allocatedHours) => {
   try {
@@ -200,3 +206,5 @@ export const updateEmployeeAssignment = async (primeCode, employeeId, allocatedH
     throw error;
   }
 };
+ 
+ 
