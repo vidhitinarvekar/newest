@@ -44,6 +44,7 @@
 //       localStorage.setItem("email", userEmail);
 //       localStorage.setItem("staffId", staffId || "");
 //       localStorage.setItem("isProjectOwner", isProjectOwner ? "true" : "false");
+//       localStorage.setItem("isMISManager", isMISManager ? "true" : "false");
 
 //       setIsAuthenticated(true);
 
@@ -124,7 +125,7 @@ const Login = ({ setIsAuthenticated = () => {} }) => {
         return;
       }
 
-      const { token, role, name, email: userEmail, staffId ,  isProjectOwner} = response;
+      const { token, role, name, email: userEmail, staffId ,  isProjectOwner, isMISManager} = response;
 
       if (!role) {
         setError("Role information is missing. Please contact admin.");
@@ -138,6 +139,7 @@ const Login = ({ setIsAuthenticated = () => {} }) => {
       localStorage.setItem("email", userEmail);
       localStorage.setItem("staffId", staffId || "");
       localStorage.setItem("isProjectOwner", isProjectOwner ? "true" : "false");
+      localStorage.setItem("isMISManager", isMISManager ? "true" : "false");
 
       setIsAuthenticated(true);
 

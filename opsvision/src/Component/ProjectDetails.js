@@ -512,6 +512,7 @@ const handleUpdateFTE = async (staffId) => {
       }
   
       setNewFTEs([]);
+      setEditableFTEs({});
       fetchAssignedFTEs(); // ✅ Only keep this
       // fetchProjects(); ❌ Removed to fix no-undef error
   

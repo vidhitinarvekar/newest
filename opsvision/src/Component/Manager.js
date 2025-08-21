@@ -9,8 +9,6 @@ import Loader from './Loader';
 import TinyLoader from './TinyLoader';
 import logoutIcon from './logout.png';
 
-
-
 class Manager extends Component {
     constructor(props) {
         super(props);
@@ -22,12 +20,8 @@ class Manager extends Component {
                 email: localStorage.getItem('email') || ''
             },
             editingIndex: null,
-
             tinyLoaderIndex: null,
-            isLoading: true
-        };
-        this.state = {
-            ...this.state,
+            isLoading: true,
             searchQuery: "",
             isProjectOwner: false
         };
@@ -48,13 +42,13 @@ class Manager extends Component {
                 this.setState({ isLoading: true });
             }
 
-
-            const tokenFromLocalStorage = localStorage.getItem("token");  // or whatever your key is
-
+            const tokenFromLocalStorage = localStorage.getItem("token");
             const response = await secureAxios.get("/api/ProjectFteManagement/my-assigned-projects/exclude-self");
             const projectsData = response.data;
 
             const staffId = localStorage.getItem('staffId');
+            const managerStaffId = staffId;
+            
             if (!staffId) {
                 alert("Staff ID not found. Please log in again.");
                 return;
@@ -66,8 +60,7 @@ class Manager extends Component {
                     let totalCommittedHours = 0;
                     let managerTeamTotal = 0;
 
-
-
+                    // Fetch last committed hours for this specific staff member
                     try {
                         const committedRes = await secureAxios.get("/api/ProjectManagement/get-committed-hours", {
                             params: {
@@ -81,24 +74,34 @@ class Manager extends Component {
                         console.warn(`Failed to fetch last committed hours for project ${proj.projectId}:`, err);
                     }
 
+                    // Fetch manager team total using the correct API endpoint
                     try {
-                        const { data } = await secureAxios.get(`https://localhost:7049/api/ProjectFteManagement/project/${proj.projectTaskId}/committed-hours`, {
-
-                            params: {
-
-                                managerStaffId: staffId   // <-- Pass it here!
-
+                        console.log('Fetching manager team data for projectTaskId:', proj.projectTaskId);
+                        console.log('managerStaffId:', managerStaffId);
+                        
+                        // Using the correct API endpoint format from your backend
+                        const { data } = await secureAxios.get(
+                            `/api/ProjectFteManagement/projecttask/${proj.projectTaskId}/committed-hours`,
+                            {
+                                params: {
+                                    managerStaffId: managerStaffId
+                                },
+                                headers: { Authorization: `Bearer ${tokenFromLocalStorage}` }
                             }
+                        );
 
-                        });
-
-                        totalCommittedHours = data?.totalCommittedHours || 0;
-                        managerTeamTotal = data?.managerTeamTotal || 0;
+                        console.log("Manager team API response data:", data);
+                        
+                        // Extract values from your API response structure
+                        totalCommittedHours = data?.totalProjectCommittedHours ?? 0;
+                        managerTeamTotal = data?.managerTeamTotal ?? 0;
 
                     } catch (err) {
-                        console.warn(`Failed to fetch total committed hours for project ${proj.projectId}:`, err);
+                        console.warn(
+                            `Failed to fetch manager team data for project task ${proj.projectTaskId}:`,
+                            err
+                        );
                     }
-
 
                     return {
                         projectId: proj.projectId || "N/A",
@@ -106,64 +109,57 @@ class Manager extends Component {
                         taskName: proj.taskName || "N/A",
                         allocatedHours: proj.allocatedHours ?? 0,
                         assignedBy: proj.assignedByName || "Unknown",
-                        committedHours: totalCommittedHours, // use this as readonly committed hours
-                        inputHours: totalCommittedHours,     // default same as above
+                        committedHours: totalCommittedHours, // total project committed hours
+                        inputHours: 0, // reset input hours to 0 for new entries
                         remainingHrs: proj.allocatedHours - lastCommittedHours,
                         managerTeamTotal: managerTeamTotal,
                         lastCommittedHours: lastCommittedHours,
-                        projectTaskId:proj.projectTaskId,
-                        remarks: proj.remarks || "" 
+                        projectTaskId: proj.projectTaskId,
+                        remarks: proj.remarks || ""
                     };
                 })
             );
-
 
             this.setState({ projects: projectsWithHours }, async () => {
                 const staffId = localStorage.getItem('staffId');
                 const committedHoursMap = {};
 
                 for (const proj of projectsWithHours) {
-                    const hours = await this.fetchCommittedHours(staffId, proj.projectId);
-                    committedHoursMap[proj.projectId] = hours;
+                    const hours = await this.fetchCommittedHours(staffId, proj.projectTaskId);
+                    committedHoursMap[proj.projectTaskId] = hours;
                 }
 
                 this.setState({ committedHours: committedHoursMap });
             });
 
-
         } catch (error) {
             console.error("Error fetching project data:", error);
             alert(error.message || "Unauthorized or failed to fetch project data.");
-        }
-        finally {
+        } finally {
             if (!skipLoader) {
-                this.setState({ isLoading: false }); // only stop loader if it was started
+                this.setState({ isLoading: false });
             }
         }
-
     };
-
-
-
-
 
     fetchCommittedHours = async (staffId, projectTaskId) => {
         try {
-          const { data } = await axios.get(
-            `https://localhost:7049/api/ProjectManagement/get-committed-hours`,
-            {
-              params: { projectTaskId, staffId }
-            }
-          );
-          // Return the committedHours from the response, fallback 0 if undefined
-          return data.committedHours || 0;
+            const tokenFromLocalStorage = localStorage.getItem("token");
+            const { data } = await secureAxios.get(
+                `/api/ProjectManagement/get-committed-hours`,
+                {
+                    params: { projectTaskId, staffId },
+                    headers: { Authorization: `Bearer ${tokenFromLocalStorage}` }
+                }
+            );
+            return data.committedHours || 0;
         } catch (error) {
-          console.error("Error fetching committed hours:", error);
-          return 0;
+            console.error("Error fetching committed hours:", error);
+            return 0;
         }
-      };
-      
+    };
 
+    // Removed the duplicate fetchManagerTeamTotal function since it's now integrated above
 
     handleHoursChange = (index, hours) => {
         if (hours < 0) return;
@@ -174,7 +170,6 @@ class Manager extends Component {
             )
         }));
     };
-
 
     logout = () => {
         localStorage.removeItem('userToken');
@@ -205,45 +200,38 @@ class Manager extends Component {
         let committedHours = parseFloat(project.inputHours || 0);
         if (isNaN(committedHours) || committedHours < 0) {
             alert("Committed hours cannot be negative.");
+            this.setState({ tinyLoaderIndex: null });
             return;
         }
 
         const totalCommitted = project.lastCommittedHours + committedHours;
         if (totalCommitted > project.allocatedHours) {
             alert(`Total committed hours (${totalCommitted}) exceed allocated hours (${project.allocatedHours}).`);
+            this.setState({ tinyLoaderIndex: null });
             return;
         }
 
         const staffId = localStorage.getItem('staffId');
         if (!staffId) {
             alert("Staff ID not found. Please log in again.");
+            this.setState({ tinyLoaderIndex: null });
             return;
         }
 
         const isFirstEntry = project.committedHours === 0;
 
-        const postRequestBody = {
+        const requestBody = {
             committedHoursDto: {
                 projectTaskId: project.projectTaskId,
                 staffId: Number(staffId),
                 committedHours: committedHours
-                
-              }
-        };
-
-        const putRequestBody = {
-            committedHoursDto: {
-                projectTaskId: project.projectTaskId,
-                staffId: Number(staffId),
-                committedHours: committedHours
-                
-              }
+            }
         };
 
         try {
             const response = await secureAxios[isFirstEntry ? 'post' : 'put'](
                 "/api/ProjectFteManagement/commit-hours",
-                isFirstEntry ? postRequestBody : putRequestBody
+                requestBody
             );
 
             if (response.status === 200) {
@@ -255,7 +243,7 @@ class Manager extends Component {
         } catch (error) {
             alert("Error saving committed hours: " + (error.response ? JSON.stringify(error.response.data) : error.message));
         } finally {
-            this.setState({ tinyLoaderIndex: null }); // hide loader after update
+            this.setState({ tinyLoaderIndex: null });
         }
     };
 
@@ -276,9 +264,6 @@ class Manager extends Component {
             return <Loader />;
         }
 
-
-
-
         return (
             <div className="dashboard-container">
                 <div className="custom-dashboard-header">
@@ -292,13 +277,13 @@ class Manager extends Component {
 
                     {/* Right Side: Search + Buttons */}
                     <div className="custom-right-section">
-                        <div className="custom-search-container">
+                        <div className="custom-search-container-manager">
                             <input
                                 type="text"
                                 placeholder="Search by Assigned By or PrimeCode"
                                 value={this.state.searchQuery}
                                 onChange={(e) => this.setState({ searchQuery: e.target.value })}
-                                className="custom-search-input"
+                                className="custom-search-input-manager"
                             />
                         </div>
 
@@ -331,9 +316,6 @@ class Manager extends Component {
                     </div>
                 </div>
 
-
-
-                {/* <h1 className="instr">Select a PrimeCode to Begin Assignment</h1> */}
                 <div className="tables-section">
                     <div className="tables-wrapper">
                         <table className="tables tables-bordered tables-striped">
@@ -341,12 +323,10 @@ class Manager extends Component {
                                 <tr>
                                     <th>Assigned By</th>
                                     <th>PrimeCode</th>
-                                    {/* <th>Task</th> */}
                                     <th>Allocated Hours</th>
                                     <th>Commit Hours</th>
                                     <th>Your committed</th>
                                     {this.role === "Manager" && <th>Total committed</th>}
-                                    {/* <th>Remaining Hours</th> */}
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -355,7 +335,8 @@ class Manager extends Component {
                                     const query = this.state.searchQuery.toLowerCase();
                                     return (
                                         project.assignedBy.toLowerCase().includes(query) ||
-                                        project.primeCode.toLowerCase().includes(query)
+                                        project.primeCode.toLowerCase().includes(query) ||
+                                        project.taskName.toLowerCase().includes(query)
                                     );
                                 }).map((project, index) => (
                                     <tr key={index}>
@@ -375,7 +356,7 @@ class Manager extends Component {
                                                             },
                                                         })
                                                     }
-                                                    style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
+                                                    style={{ color: "#ff7900", textDecoration: "underline", cursor: "pointer" }}
                                                 >
                                                     {project.primeCode}-{project.taskName}
                                                 </span>
@@ -383,7 +364,6 @@ class Manager extends Component {
                                                 <span>{project.primeCode}-{project.taskName}</span>
                                             )}
                                         </td>
-                                        {/* <td>{project.remarks}</td> */}
                                         <td>{project.allocatedHours}</td>
                                         <td>
                                             {editingIndex === index ? (
@@ -401,32 +381,28 @@ class Manager extends Component {
                                                     className="editable-box"
                                                     onClick={() => this.setState({ editingIndex: index })}
                                                 >
-                                                    {0}
+                                                    {project.inputHours || 0}
                                                 </div>
                                             )}
                                         </td>
                                         <td style={{ color: '#ff7900', fontWeight: '700' }}>{project.lastCommittedHours}</td>
                                         {this.role === "Manager" && (
-                                            <td style={{ color: '#ff7900', fontWeight: '700' }}> {this.state.committedHours[project.projectId] || 0}</td>
+                                            <td style={{ color: '#ff7900', fontWeight: '700' }}>
+                                                {project.managerTeamTotal || 0}
+                                            </td>
                                         )}
-                                        {/* <td>{project.remainingHrs}</td> */}
-
                                         <td>
                                             <button onClick={() => this.updateCommittedHours(index)}>
                                                 {this.state.tinyLoaderIndex === index ? <TinyLoader /> : 'Update'}
                                             </button>
-
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
                     </div>
-
-                   
                 </div>
             </div>
-
         );
     }
 }

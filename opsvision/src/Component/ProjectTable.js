@@ -32,6 +32,12 @@ const role = localStorage.getItem("role");
   fetchData();
 }, [navigate]);
 
+// Reset to page 1 whenever searchQuery changes
+useEffect(() => {
+  setCurrentPage(1);
+}, [searchQuery]);
+
+
 // Restore state on mount
 useEffect(() => {
   const savedState = sessionStorage.getItem('projectTableState');
@@ -969,32 +975,42 @@ const renderPagination = () => {
                     <div className="owner-section">
   {editingOwnerProjectId === task.projectTaskId ? (
     <div className="owner-edit-controls">
-      <select
-        value={selectedManagerId || ""}
-        onChange={(e) => setSelectedManagerId(Number(e.target.value))}
-        className="manager-select"
-      >
-        <option value="">Select</option>
-        {managerList.map((mgr) => (
-          <option key={mgr.staffId} value={mgr.staffId}>
-            {mgr.fullName}
-          </option>
-        ))}
-      </select>
+     <select
+  value={selectedManagerId || ""}
+  onChange={(e) => {
+    e.stopPropagation(); // Prevent event from bubbling up
+    setSelectedManagerId(Number(e.target.value));
+  }}
+  onMouseDown={(e) => e.stopPropagation()} // Prevent propagation on mouse down
+  onClick={(e) => e.stopPropagation()} // Prevent propagation on click
+  className="manager-select"
+>
+  <option value="">Select</option>
+  {managerList.map((mgr) => (
+    <option key={mgr.staffId} value={mgr.staffId}>
+      {mgr.fullName}
+    </option>
+  ))}
+</select>
+
+
       <button
-        onClick={() => handleOwnerUpdate(
+        onClick={(e) => {
+           e.stopPropagation(); 
+          handleOwnerUpdate(
           projects.find(p =>
             p.tasks.some(t => t.projectTaskId === task.projectTaskId)
           )?.projectId,
           selectedManagerId,
           primeCode
-        )}
+        )}}
         className="action-btn save"
       >
         Save
       </button>
       <button
-        onClick={() => {
+        onClick={(e) => {
+           e.stopPropagation(); 
           setEditingOwnerProjectId(null);
           setSelectedManagerId(null);
         }}
@@ -1006,16 +1022,20 @@ const renderPagination = () => {
   ) : (
     <>
       <span className="owner-name">{task.ownerName}</span>
-      <button
-        onClick={() => {
-          setEditingOwnerProjectId(task.projectTaskId);
-          fetchManagerList();
-        }}
-        className="edit-owner-btn"
-        title="Edit Owner"
-      >
-        ✎
-      </button>
+     {role === "VerticalLead" && (
+  <button
+    onClick={(e) => {
+      e.stopPropagation(); // Prevent event from bubbling up
+      setEditingOwnerProjectId(task.projectTaskId);
+      fetchManagerList();
+    }}
+    className="edit-owner-btn"
+    title="Edit Owner"
+  >
+    ✎
+  </button>
+)}
+
     </>
   )}
 </div>

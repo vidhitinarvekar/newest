@@ -201,6 +201,10 @@ class ProjectTrackingDashboard extends Component {
         this.props.navigate('/manager');
     };
 
+     ftes = () => {
+        this.props.navigate('/project-table');
+    };
+
 
 
     updateCommittedHours = async (index) => {
@@ -326,13 +330,13 @@ class ProjectTrackingDashboard extends Component {
 
                     {/* Right Side: Search + Buttons */}
                     <div className="custom-right-section">
-                        <div className="custom-search-container">
+                        <div className="custom-search-container-track">
                             <input
                                 type="text"
                                 placeholder="Search by Assigned By or PrimeCode"
                                 value={this.state.searchQuery}
                                 onChange={(e) => this.setState({ searchQuery: e.target.value })}
-                                className="custom-search-input"
+                                className="custom-search-input-track"
                             />
                         </div>
 
@@ -393,7 +397,8 @@ class ProjectTrackingDashboard extends Component {
                                     const query = this.state.searchQuery.toLowerCase();
                                     return (
                                         (project.delegatedByName || "").toLowerCase().includes(query) ||
-                                        (project.primeCode || "").toLowerCase().includes(query)
+                                        (project.primeCode || "").toLowerCase().includes(query) ||
+                                        (project.taskName || "").toLowerCase().includes(query)
                                     );
                                 }).map((project, index) => (
 

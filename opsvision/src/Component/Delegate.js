@@ -7,17 +7,17 @@ import { useNavigate } from "react-router-dom";
 import homeIcon from "./home.png";
 import back from "./backs.png";
 import logoutIcon from './logout.png';
-import backIcon from './backs.png'; 
+import backIcon from './backs.png';
 
 export default function Delegate() {
    const navigate = useNavigate();
   const { projectId } = useParams();
   const location = useLocation();
   const { allocatedHours, primeCode, taskName } = location.state || {};
- 
+
   const searchResultsRef = useRef(null);
   const searchInputRef = useRef(null);
- 
+
   const [assignedEmployees, setAssignedEmployees] = useState([]);
   const [remainingHours, setRemainingHours] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
@@ -31,21 +31,21 @@ export default function Delegate() {
   console.log('Extracted projectTaskId:', projectTaskId);
 
   const staffId = localStorage.getItem("staffId");
-  
- 
+
+
   useEffect(() => {
     if (projectTaskId) {
       fetchProjectFTEs(projectTaskId);
     }
   }, [projectTaskId]);
- 
+
   useEffect(() => {
     if (projectTaskId) {
       fetchRemainingHrs(projectTaskId);
     }
   }, [projectTaskId]);
- 
- 
+
+
   useEffect(() => {
     const fetchEmployees = async () => {
       if (!searchQuery) {
@@ -63,8 +63,8 @@ export default function Delegate() {
     };
     fetchEmployees();
   }, [searchQuery]);
- 
- 
+
+
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -79,7 +79,7 @@ export default function Delegate() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
- 
+
   const fetchRemainingHrs = async (projectTaskId) => {
     try {
       const response = await axios.get(
@@ -90,7 +90,7 @@ export default function Delegate() {
           },
         }
       );
-  
+
       if (response.data && response.data.remainingHrs !== undefined) {
         setRemainingHours(response.data.remainingHrs);
       } else {
@@ -100,7 +100,7 @@ export default function Delegate() {
       console.error("Error fetching remaining hours from API:", error);
     }
   };
-  
+
   const handleLogout = () => {
     localStorage.clear();
     sessionStorage.removeItem("hasRefreshed");
@@ -109,20 +109,20 @@ export default function Delegate() {
     navigate("/login");
     window.location.reload();
   };
- 
+
   const fetchProjectFTEs = async (projectTaskId) => {
-    
+
     try {
       const response = await axios.get('https://localhost:7049/api/ProjectFteEmployee/manager-assignments', {
         headers: {
           projectTaskId: projectTaskId  // this would send it as ?projectTaskId=... in URL
         }
       });
-      
+
       const employees = response.data;
-  
+
       setAssignedEmployees(employees || []);
-  
+
       // const initialFte = {};
       const initialFte = {};
 employees.forEach(emp => {
@@ -132,13 +132,13 @@ setFteHours(initialFte);
 
       const committedMap = {};
       let totalAllocated = 0;
-  
+
       await Promise.all(
         employees.map(async (emp) => {
           const hours = parseFloat(emp.allocatedHours) || 0;
           initialFte[emp.staffId] = hours;
           totalAllocated += hours;
-  
+
           // const committed = await fetchCommittedHours(projectTaskId, emp.staffId); // ✅ pass projectTaskId
           // committedMap[emp.staffId] = committed;
           const committedData = await fetchCommittedHours(projectTaskId, emp.staffId);
@@ -147,22 +147,22 @@ committedMap[emp.staffId] = committedHours;
 
         })
       );
-  
+
       setFteHours(initialFte);
       setCommittedHoursMap(committedMap);
       setNewEmployees([]);
-  
+
       const remaining = parseFloat(allocatedHours) - totalAllocated;
       setRemainingHours(remaining >= 0 ? remaining : 0);
-      
+
       return employees;
     } catch (err) {
       console.error("Error fetching FTEs:", err);
       return [];
     }
   };
-  
- 
+
+
   // const totalCommittedHours = Object.values(committedHours).reduce((sum, hours) => sum + hours, 0);
   const totalCommittedHours = Object.values(committedHoursMap).reduce(
     (sum, hours) => sum + parseFloat(hours || 0),
@@ -174,7 +174,7 @@ committedMap[emp.staffId] = committedHours;
       const response = await axios.get(`https://localhost:7049/api/ProjectManagement/get-committed-hours`, {
         params: { projectTaskId, staffId }
       });
-  
+
       // Return the entire data object as is, or provide a fallback structure
       return response.data || {
         projectTaskId,
@@ -194,22 +194,22 @@ committedMap[emp.staffId] = committedHours;
       };
     }
   };
-  
- 
- 
+
+
+
   const handleSelectEmployee = (employee) => {
     const alreadyAssigned = assignedEmployees.some(emp => emp.staffId === employee.staffId);
- 
+
   const alreadySelected = newEmployees.some(emp => emp.staffId === employee.staffId);
- 
+
   if (alreadyAssigned || alreadySelected) {
- 
+
     alert("This employee is already assigned or selected.");
- 
+
     return;
   }
   setNewEmployees((prev) => [...prev, employee]);
- 
+
   setSearchQuery("");
   setSearchResults([]);
 };
@@ -218,28 +218,28 @@ const handleSaveAllNewEmployees = async () => {
     try {
       // const pathSegments = window.location.pathname.split('/');
       // const projectTaskId = pathSegments[pathSegments.length - 1];
-    
+
       // console.log('Extracted projectTaskId:', projectTaskId);
-    
+
       let totalToAssign = 0;
- 
+
       const payloadList = [];
- 
+
       for (const emp of newEmployees) {
         const allocated = parseFloat(fteHours[emp.staffId]);
- 
+
         if (!allocated || allocated <= 0) {
           alert(`Please enter valid allocated hours for ${emp.firstName} ${emp.lastName}.`);
           return;
         }
- 
+
         totalToAssign += allocated;
- 
+
        const payload = {
-        projectTaskId: parseInt(projectTaskId), 
+        projectTaskId: parseInt(projectTaskId),
         //projectId: parseInt(projectId),
- 
- 
+
+
   delegatees: [
     {
       staffId: emp.staffId,
@@ -250,7 +250,7 @@ const handleSaveAllNewEmployees = async () => {
 };
         payloadList.push(payload);
       }
- 
+
       if (totalToAssign > remainingHours) {
         alert(`Only ${remainingHours} hours are remaining. Cannot assign ${totalToAssign}.`);
         return;
@@ -263,30 +263,28 @@ const handleSaveAllNewEmployees = async () => {
           failedStaff.push(payload.staffId);
         }
       }
-  
+
       if (failedStaff.length > 0) {
         alert(`Some employees could not be saved. Failed Staff IDs: ${failedStaff.join(", ")}`);
       }
-  
+
       setNewEmployees([]);
       fetchProjectFTEs(projectTaskId);
-  
+
     } catch (error) {
       console.error("❌ Unexpected error while saving new employees:", error);
       alert("Unexpected error occurred during allocation.");
     }
   };
- 
- 
- 
- const handleUpdateHours = async (staffIdToUpdate) => {
+
+const handleUpdateHours = async (staffIdToUpdate) => {
     try {
       const newAllocated = parseFloat(fteHours[staffIdToUpdate]);
-  
+ 
       if (isNaN(newAllocated) || newAllocated <= 0) {
         alert("Allocated hours must be a valid number greater than 0.");
         const freshList = await fetchProjectFTEs(projectTaskId);
-  
+ 
         const freshEmp = freshList.find(emp => emp.staffId === staffIdToUpdate);
         if (freshEmp) {
           setFteHours(prev => ({
@@ -296,14 +294,14 @@ const handleSaveAllNewEmployees = async () => {
         }
         return;
       }
-  
+ 
       const currentEmp = assignedEmployees.find(emp => emp.staffId === staffIdToUpdate);
       const prevAllocated = parseFloat(currentEmp?.allocatedHours || 0);
       const delta = newAllocated - prevAllocated;
-  
+ 
       if (delta > remainingHours) {
         alert(`You only have ${remainingHours} hours remaining. Cannot assign additional ${delta} hours.`);
-  
+ 
         const freshList = await fetchProjectFTEs(projectTaskId);
         const freshEmp = freshList.find(emp => emp.staffId === staffIdToUpdate);
         if (freshEmp) {
@@ -314,9 +312,9 @@ const handleSaveAllNewEmployees = async () => {
         }
         return;
       }
-  
+ 
       const loggedInStaffId = parseInt(localStorage.getItem("staffId"));
-  
+ 
       const payload = {
         projectTaskId: parseInt(projectTaskId), // NEW field
         //projectId: parseInt(projectId),
@@ -324,14 +322,14 @@ const handleSaveAllNewEmployees = async () => {
         delegatees: [
           {
             staffId: staffIdToUpdate,
-      staffName: currentEmp?.staffName || "Unknown",
-      allocatedHours: newAllocated,
+            staffName: currentEmp?.staffName || "Unknown",
+            allocatedHours: newAllocated,
           }
         ]
       };
-  
+ 
       await axios.put("https://localhost:7049/api/ProjectFteEmployee/update", payload);
-  
+ 
       const freshList = await fetchProjectFTEs(projectTaskId);
       const freshEmp = freshList.find(emp => emp.staffId === staffIdToUpdate);
       if (freshEmp) {
@@ -340,11 +338,11 @@ const handleSaveAllNewEmployees = async () => {
           [staffIdToUpdate]: freshEmp.allocatedHours || 0,
         }));
       }
-  
+ 
     } catch (error) {
       console.error("Error updating hours:", error);
       alert("Failed to update hours.");
-  
+ 
       const freshList = await fetchProjectFTEs(projectTaskId);
       const freshEmp = freshList.find(emp => emp.staffId === staffIdToUpdate);
       if (freshEmp) {
@@ -355,6 +353,8 @@ const handleSaveAllNewEmployees = async () => {
       }
     }
   };
+ 
+ 
 
  const handleUpdateAllAssignedEmployees = async () => {
   try {
@@ -408,11 +408,11 @@ const handleSaveAllNewEmployees = async () => {
   }
 };
 
- 
 
- 
- 
- 
+
+
+
+
   const handleDeleteFte = async (staffIdToDelete) => {
     const delegatedBy = parseInt(localStorage.getItem('staffId'));
     try {
@@ -421,13 +421,13 @@ const handleSaveAllNewEmployees = async () => {
           delegatedBy: delegatedBy
         }
       });
-     
+
       fetchProjectFTEs(projectTaskId);
     } catch (error) {
       console.error("Error deleting FTE:", error);
     }
   };
-  
+
 
  const remainingCommittedHours = parseFloat(allocatedHours) - totalCommittedHours;
   return (
@@ -435,7 +435,7 @@ const handleSaveAllNewEmployees = async () => {
      <div className="detail-dashboard-header-delegate">
   {/* Left Side: Logo + Title */}
   <div className="detail-left-section-delegate">
-    <img src={logo} alt="Orange Business Logo" className="detail-logo" />
+    <img src={logo} alt="Orange Business Logo" className="detail-logo-delegate" />
     <div
       className="detail-back-icon-container-delegate"
       title="Back"
@@ -449,7 +449,7 @@ const handleSaveAllNewEmployees = async () => {
   </div>
 
   <div className="detail-right-section-delegate">
-  
+
     <div
       className="detail-home-icon-container-delegate"
       title="Go to Homepage"
@@ -466,17 +466,26 @@ const handleSaveAllNewEmployees = async () => {
     </button>
   </div>
 </div>
- 
-     <div className="delegate-project-info-delegate">
+
+     {/* <div className="delegate-project-info-delegate">
   <p style={{ color: "#ff7900", fontWeight: "bold" }}>{primeCode}-{taskName}</p>
   <p>Total Hours: {allocatedHours}</p>
   <p style={{ color: "#ff7900" }}>Remaining Allocations: {remainingHours}</p>
   <p>Total Commits: {totalCommittedHours}</p>
   <p style={{ color: "#ff7900" }}>Remaining Commits: {remainingCommittedHours}</p>
+</div> */}
+<div className="delegate-project-info-single-line">
+  <p className="primecode-taskname">{primeCode}-{taskName}</p>
+  <div className="stats-container">
+    <p className="stat-item">Total Hours: {allocatedHours}</p>
+    <p className="stat-item">Remaining Allocations: {remainingHours}</p>
+    <p className="stat-item">Total Commits: {totalCommittedHours}</p>
+    <p className="stat-item">Remaining Commits: {remainingCommittedHours}</p>
+  </div>
 </div>
- 
-      {/* Search Bar */}
-      <div className="delegate-search-section-delegate">
+
+
+        <div className="delegate-search-section-delegate">
         <input
           ref={searchInputRef}
           type="text"
@@ -486,6 +495,21 @@ const handleSaveAllNewEmployees = async () => {
           onChange={(e) => setSearchQuery(e.target.value)}
           onFocus={() => setSearchResults(searchQuery ? searchResults : [])}
         />
+
+        {/* Action buttons moved inside search section */}
+        <div className="action-buttons-delegate">
+          {newEmployees.length > 0 && (
+            <button className="save-all-button-delegate" onClick={handleSaveAllNewEmployees}>
+              Save All
+            </button>
+          )}
+          {/* {assignedEmployees.length > 0 && (
+            <button className="update-all-button-delegate" onClick={handleUpdateAllAssignedEmployees}>
+              Update All
+            </button>
+          )} */}
+        </div>
+
         {searchResults.length > 0 && (
           <div className="delegate-search-results-delegate" ref={searchResultsRef}>
             <ul>
@@ -499,29 +523,18 @@ const handleSaveAllNewEmployees = async () => {
           </div>
         )}
       </div>
-     <div className="action-buttons-delegate">
-      {newEmployees.length > 0 && (
-        <button className="save-all-button-delegate" onClick={handleSaveAllNewEmployees}>
-          Save All
-        </button>
-      )}
-      {assignedEmployees.length > 0 && (
-        <button className="update-all-button-delegate" onClick={handleUpdateAllAssignedEmployees}>
-          Update All
-        </button>
-      )}
-    </div>
 
- 
+
       {/* FTE Table */}
       <div className="delegate-table-container-delegate">
-        <h2>Assigned Employees</h2>
+        {/* <h2>Assigned Employees</h2> */}
         <table className="delegate-table-delegate">
           <thead>
             <tr>
               <th>Staff Name</th>
               <th>Allocated Hours</th>
               <th>Committed hours</th>
+              <th>Remaining</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -544,11 +557,15 @@ const handleSaveAllNewEmployees = async () => {
     <td>Pending</td>
   </tr>
 ))}
- 
-            {assignedEmployees.map((emp) => (
+
+           {assignedEmployees.map((emp) => {
+  const allocated = parseFloat(fteHours[emp.staffId]) || 0;
+  const committed = parseFloat(committedHoursMap[emp.staffId]) || 0;
+  const remainingPerEmployee = allocated - committed;
+  return (
               <tr key={emp.staffId}>
                 <td>{`${emp.firstName} ${emp.lastName}`}</td>
- 
+
                 <td>
                   <input
                     type="number"
@@ -560,15 +577,17 @@ const handleSaveAllNewEmployees = async () => {
                   />
                 </td>
                 <td>{committedHoursMap[emp.staffId] || 0}</td>
- 
+                 <td>{remainingPerEmployee >= 0 ? remainingPerEmployee : 0}</td>
+
                 <td>
                 <button onClick={() => handleUpdateHours(emp.staffId)}>Update</button>
- 
+
                   <button onClick={() => handleDeleteFte(emp.staffId)}>Delete</button>
                 </td>
               </tr>
-            ))}
- 
+            );
+})}
+
           </tbody>
         </table>
       </div>
