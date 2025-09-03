@@ -459,7 +459,7 @@ const fetchManagerList = async () => {
   }
 };
 
-const handleOwnerUpdate = async (projectId, newStaffId, primeCode) => {
+const handleOwnerUpdate = async (projectId, projectTaskId, newStaffId, primeCode) => {
   try {
     const token = localStorage.getItem("token");
 
@@ -471,6 +471,7 @@ const handleOwnerUpdate = async (projectId, newStaffId, primeCode) => {
       },
       body: JSON.stringify({
         projectId,
+        projectTaskId, // include the task ID from the row
         newStaffId,
       }),
     });
@@ -487,6 +488,7 @@ const handleOwnerUpdate = async (projectId, newStaffId, primeCode) => {
     alert("Error updating owner: " + err.message);
   }
 };
+
 
 
   // const handleFteSave = async (primeCode, task) => {
@@ -994,20 +996,26 @@ const renderPagination = () => {
 </select>
 
 
-      <button
-        onClick={(e) => {
-           e.stopPropagation(); 
-          handleOwnerUpdate(
-          projects.find(p =>
-            p.tasks.some(t => t.projectTaskId === task.projectTaskId)
-          )?.projectId,
-          selectedManagerId,
-          primeCode
-        )}}
-        className="action-btn save"
-      >
-        Save
-      </button>
+  <button
+  onClick={(e) => {
+    e.stopPropagation(); 
+    const project = projects.find(p =>
+      p.tasks.some(t => t.projectTaskId === task.projectTaskId)
+    );
+    if (!project) return;
+
+    handleOwnerUpdate(
+      project.projectId,           // projectId
+      task.projectTaskId,          // projectTaskId from the row
+      selectedManagerId,           // newStaffId
+      primeCode                    // primeCode
+    );
+  }}
+  className="action-btn save"
+>
+  Save
+</button>
+
       <button
         onClick={(e) => {
            e.stopPropagation(); 
