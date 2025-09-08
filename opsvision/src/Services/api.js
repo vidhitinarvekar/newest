@@ -108,33 +108,12 @@ export const getProjectFteDetails = async (projectId) => {
  
  
 // Login
-// export const login = async (username, password) => {
-//   try {
-//     const response = await axios.post(`${API_BASE_URL}/Auth/login`, {
-//       username,
-//       password
-//     });
-//     const data = response.data;
- 
-//     if (data?.token && data?.role) {
-//       return data;
-//     } else {
-//       throw new Error("Invalid response from server.");
-//     }
-//   } catch (error) {
-//     console.error("Login failed:", error?.response?.data || error.message);
-//     throw new Error("Login failed. Check credentials.");
-//   }
-// };
-export const login = async (email) => {
- try {
-    const payload = {
-      username: "", // sending as empty string
-      password: "", // sending as empty string
-      email
-    };
- 
-    const response = await axios.post(`${API_BASE_URL}/Auth/locallogin`, payload);
+export const login = async (username, password) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/Auth/login`, {
+      username,
+      password
+    });
     const data = response.data;
  
     if (data?.token && data?.role) {
@@ -147,6 +126,26 @@ export const login = async (email) => {
     throw new Error("Login failed. Check credentials.");
   }
 };
+// export const login = async (email) => {
+//  try {
+//     const payload = {
+//  username: username, // actual username string
+//   password: password  // actual password string
+//     };
+ 
+//     const response = await axios.post(`${API_BASE_URL}/Auth/login`, payload);
+//     const data = response.data;
+ 
+//     if (data?.token && data?.role) {
+//       return data;
+//     } else {
+//       throw new Error("Invalid response from server.");
+//     }
+//   } catch (error) {
+//     console.error("Login failed:", error?.response?.data || error.message);
+//     throw new Error("Login failed. Check credentials.");
+//   }
+// };
  
  
 // Get user projects
